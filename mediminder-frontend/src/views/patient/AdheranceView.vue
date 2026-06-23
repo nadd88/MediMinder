@@ -109,32 +109,32 @@ function barColor(percent) {
       </div>
 
     </main>
-
-<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex">
-      <router-link
-        to="/patient"
-        class="flex-1 flex flex-col items-center py-3 text-xs"
-        active-class="text-green-700 font-semibold"
-      >
-        <span class="text-lg"><img src="@/assets/home-icon.png" alt="Home" width="24" height="24"></span>
-        Dashboard
-      </router-link>
-      <router-link
-        to="/patient/doses"
-        class="flex-1 flex flex-col items-center py-3 text-xs"
-        active-class="text-green-700 font-semibold"
-      >
-        <span class="text-lg"><img src="@/assets/pill-icon.png" alt="Doses" width="24" height="24"></span>
-        Doses
-      </router-link>
-      <router-link
-        to="/patient/adherence"
-        class="flex-1 flex flex-col items-center py-3 text-xs"
-        active-class="text-green-700 font-semibold"
-      >
-        <span class="text-lg"><img src="@/assets/adherence-icon.png" alt="Adherence" width="24" height="24"></span>
-        Adherence
-      </router-link>
-    </nav>
+    <!-- bottom navigation bar-->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex">
+        <router-link
+            to="/patient"
+            class="flex-1 flex flex-col items-center py-3 text-xs"
+            active-class="text-green-700 font-semibold"
+        >
+            <span class="text-lg"><img src="@/assets/home-icon.png" alt="Home" width="24" height="24"></span>
+            Dashboard
+        </router-link>
+        <router-link
+            to="/patient/doses"
+            class="flex-1 flex flex-col items-center py-3 text-xs"
+            active-class="text-green-700 font-semibold"
+        >
+            <span class="text-lg"><img src="@/assets/pill-icon.png" alt="Doses" width="24" height="24"></span>
+            Doses
+        </router-link>
+        <router-link
+            to="/patient/adherence"
+            class="flex-1 flex flex-col items-center py-3 text-xs"
+            active-class="text-green-700 font-semibold"
+        >
+            <span class="text-lg"><img src="@/assets/adherence-icon.png" alt="Adherence" width="24" height="24"></span>
+            Adherence
+        </router-link>
+        </nav>
   </div>
 </template>

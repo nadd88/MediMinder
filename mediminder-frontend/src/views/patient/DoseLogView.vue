@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 
-// Same data as Dashboard - later both will come from the same Pinia store
+//Will be replaced with real API data later
 const medications = ref([
   { id: 1, name: 'Metformin 500mg', dose: '1 tablet with food', time: '8:00 AM', status: 'taken', takenAt: '8:12 AM' },
   { id: 2, name: 'Lisinopril 10mg', dose: '1 tablet before meal', time: '12:00 PM', status: 'due' },
@@ -87,32 +87,32 @@ function cancelAction() {
     </main>
 
     <!-- Bottom nav -->
-<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex">
-      <router-link
-        to="/patient"
-        class="flex-1 flex flex-col items-center py-3 text-xs"
-        active-class="text-green-700 font-semibold"
-      >
-        <span class="text-lg"><img src="@/assets/home-icon.png" alt="Home" width="24" height="24"></span>
-        Dashboard
-      </router-link>
-      <router-link
-        to="/patient/doses"
-        class="flex-1 flex flex-col items-center py-3 text-xs"
-        active-class="text-green-700 font-semibold"
-      >
-        <span class="text-lg"><img src="@/assets/pill-icon.png" alt="Doses" width="24" height="24"></span>
-        Doses
-      </router-link>
-      <router-link
-        to="/patient/adherence"
-        class="flex-1 flex flex-col items-center py-3 text-xs"
-        active-class="text-green-700 font-semibold"
-      >
-        <span class="text-lg"><img src="@/assets/adherence-icon.png" alt="Adherence" width="24" height="24"></span>
-        Adherence
-      </router-link>
-    </nav>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex">
+        <router-link
+            to="/patient"
+            class="flex-1 flex flex-col items-center py-3 text-xs"
+            active-class="text-green-700 font-semibold"
+        >
+            <span class="text-lg"><img src="@/assets/home-icon.png" alt="Home" width="24" height="24"></span>
+            Dashboard
+        </router-link>
+        <router-link
+            to="/patient/doses"
+            class="flex-1 flex flex-col items-center py-3 text-xs"
+            active-class="text-green-700 font-semibold"
+        >
+            <span class="text-lg"><img src="@/assets/pill-icon.png" alt="Doses" width="24" height="24"></span>
+            Doses
+        </router-link>
+        <router-link
+            to="/patient/adherence"
+            class="flex-1 flex flex-col items-center py-3 text-xs"
+            active-class="text-green-700 font-semibold"
+        >
+            <span class="text-lg"><img src="@/assets/adherence-icon.png" alt="Adherence" width="24" height="24"></span>
+            Adherence
+        </router-link>
+        </nav>
 
     <!-- Confirmation modal (pops up when pending is not null) -->
     <div
