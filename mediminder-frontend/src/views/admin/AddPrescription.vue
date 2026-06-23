@@ -1,9 +1,4 @@
 <script setup>
-// src/views/admin/AddPrescription.vue
-// Dedicated "Add prescription" page for the Clinic Administrator.
-// Focused, single-purpose form: pick a patient + drug, set the schedule,
-// see live drug-interaction warnings, then save. On success it redirects
-// to the patient's prescription list (or stays to add another).
 
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
