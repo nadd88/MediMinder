@@ -7,9 +7,11 @@ import CaregiverDashboard from '../views/caregiver/CaregiverDashboard.vue'
 import AddPrescription from '../views/admin/AddPrescription.vue'
 import AdminLayout from "../views/admin/AdminLayout.vue"
 import AdherenceReport from "../views/admin/AdherenceReport.vue"
+import RegisterView from '../views/RegisterView.vue'
 
 
 const routes = [
+  { path: '/', redirect: '/login' },
   { path: '/login', component: LoginView },
   { path: '/patient', component: PatientDashboard },
   { path: '/caregiver', component: CaregiverDashboard },
@@ -17,7 +19,8 @@ const routes = [
   { path: '/patient/adherence', component: AdheranceView },
   { path: '/admin/add-prescription', component: AddPrescription },
   { path: '/admin/adherence-report', component: AdherenceReport },
-  { path: '/admin', component: AdminLayout }
+  { path: '/admin', component: AdminLayout },
+  { path: '/register' , component: RegisterView }
 ]
 
 
