@@ -3,12 +3,17 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
+
 const router = useRouter()
 const auth = useAuthStore()
 
 const role = ref('Patient')
 const email = ref('')
 const password = ref('')
+
+function goToRegister() {
+  router.push('/register')
+}
 
 function handleSubmit() {
   if (!email.value || !password.value) {
@@ -80,6 +85,14 @@ function handleSubmit() {
         class="w-full bg-green-600 hover:bg-green-700 transition duration-200 text-white py-3 rounded-lg font-medium shadow-md"
       >
         Sign In
+      </button>
+
+      <button
+        type="button"
+        @click="goToRegister"
+        class="w-full mt-3 bg-white border border-green-600 text-green-600 py-2 rounded hover:bg-green-50"
+      >
+        Create new account
       </button>
 
       <!-- Optional Links -->
