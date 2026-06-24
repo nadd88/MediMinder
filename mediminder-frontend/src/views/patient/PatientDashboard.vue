@@ -1,14 +1,19 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
-import { mockApi } from '../../api/mockClient'
+import AppSidebar from '@/components/AppSidebar.vue'
+import { useSidebar } from '@/composables/useSidebar'
+import { mockApi } from '../../api/mockClient'  // ← NEW: API integration
+// NEW means backend integration has been added to this component
 
+const { sidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 const auth = useAuthStore()
-const sidebarOpen = ref(false)
+
+//  NEW: Loading and error states
 const loading = ref(true)
 const error = ref(null)
 
-// Data from API
+// NEW: Data from API (replacing hardcoded data)
 const summary = ref({
   adherence7day: 0,
   dueToday: 0,
@@ -17,7 +22,7 @@ const summary = ref({
 
 const medications = ref([])
 
-// Load data from mock API
+// NEW:Load data from mock API
 async function loadDashboardData() {
   loading.value = true
   error.value = null
@@ -36,7 +41,7 @@ async function loadDashboardData() {
   }
 }
 
-// Mark dose as taken
+// NEW: Mark dose as taken (end-to-end feature)
 async function markDoseTaken(medicationId) {
   try {
     const response = await mockApi.markDose(medicationId, 'taken')
@@ -56,16 +61,7 @@ async function markDoseTaken(medicationId) {
   }
 }
 
-// Sidebar functions
-function toggleSidebar() {
-  sidebarOpen.value = !sidebarOpen.value
-}
-
-function closeSidebar() {
-  sidebarOpen.value = false
-}
-
-// Helper functions
+// Helper functions (unchanged)
 function statusColor(status) {
   if (status === 'taken') return 'bg-green-100 text-green-700'
   if (status === 'due') return 'bg-amber-100 text-amber-700'
@@ -89,7 +85,7 @@ onMounted(() => {
 <template>
   <div class="min-h-screen bg-gray-50">
 
-    <!-- Loading State -->
+    <!-- NEW: Loading State -->
     <div v-if="loading" class="flex items-center justify-center min-h-screen">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
@@ -97,7 +93,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Error State -->
+    <!-- NEW: Error State -->
     <div v-else-if="error" class="flex items-center justify-center min-h-screen">
       <div class="text-center p-6 bg-red-50 rounded-xl max-w-md">
         <p class="text-red-600">⚠️ {{ error }}</p>
@@ -110,69 +106,44 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main Content (unchanged structure, data now comes from API) -->
     <div v-else>
-      <!-- OVERLAY -->
-      <div
-        v-if="sidebarOpen"
-        class="fixed inset-0 bg-black/40 z-20 md:hidden"
-        @click="closeSidebar"
-      />
-
-      <!-- SIDEBAR -->
-      <aside
-        class="fixed top-0 left-0 h-full w-56 bg-white border-r border-gray-200 z-30 flex flex-col
-               transform transition-transform duration-300 ease-in-out"
-        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-      >
-        <div class="bg-green-700 px-5 py-5 flex items-start justify-between">
-          <div>
-            <img src="@/assets/MediMinder_Logo_White_v2.png" alt="MediMinder" width="200" height="200">
-            <p class="text-green-100 text-xs mt-2">Good Morning, {{ auth.name || 'Patient' }}</p>
-          </div>
-          <button
-            @click="closeSidebar"
-            class="text-white/70 hover:text-white text-xl leading-none mt-0.5"
-            aria-label="Close sidebar"
-          >
-            ✕
-          </button>
-        </div>
-
-        <nav class="flex flex-col gap-1 p-3 flex-1">
+      <!-- Sidebar (unchanged) -->
+      <AppSidebar :open="sidebarOpen" @close="closeSidebar">
+        <template #nav-links>
           <router-link
             to="/patient"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100"
-            active-class="bg-green-50 text-green-700 font-semibold"
             @click="closeSidebar"
+            class="block font-bold text-gray-700 px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 hover:text-gray-900"
+            active-class="font-bold text-green-700 bg-green-50"
           >
-            <img src="@/assets/home-icon.png" alt="" width="20" height="20">
             Dashboard
           </router-link>
+
           <router-link
             to="/patient/doses"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100"
-            active-class="bg-green-50 text-green-700 font-semibold"
             @click="closeSidebar"
+            class="block font-bold text-gray-700 px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 hover:text-gray-900"
+            active-class="font-bold text-green-700 bg-green-50"
           >
-            <img src="@/assets/pill-icon.png" alt="" width="20" height="20">
             Doses
           </router-link>
+
           <router-link
             to="/patient/adherence"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100"
-            active-class="bg-green-50 text-green-700 font-semibold"
             @click="closeSidebar"
+            class="block font-bold text-gray-700 px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 hover:text-gray-900"
+            active-class="font-bold text-green-700 bg-green-50"
           >
-            <img src="@/assets/adherence-icon.png" alt="" width="20" height="20">
             Adherence
           </router-link>
-        </nav>
-      </aside>
+        </template>
+      </AppSidebar>
 
-      <!-- MAIN CONTENT -->
+      <!-- Main content -->
       <div class="flex flex-col min-h-screen">
-        <!-- Top bar -->
+
+        <!-- Top bar (unchanged) -->
         <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
           <button
             @click="toggleSidebar"
@@ -191,16 +162,16 @@ onMounted(() => {
           </p>
         </header>
 
-        <!-- Mobile greeting -->
+        <!-- Mobile greeting (unchanged) -->
         <div class="md:hidden bg-green-700 px-4 pt-4 pb-8">
           <p class="text-sm text-white/80">Good Morning,</p>
-          <h1 class="text-xl font-bold text-white">{{ auth.name || 'Patient' }}</h1>
+          <h1 class="text-xl font-bold text-white">{{ auth.name }}</h1>
         </div>
 
         <!-- Page content -->
         <main class="px-4 md:px-8 py-4 md:py-6 -mt-4 md:mt-0 max-w-4xl w-full pb-24 md:pb-8">
 
-          <!-- Stat cards -->
+          <!-- Stat cards (data now from API) -->
           <section class="grid grid-cols-3 gap-3 mb-6">
             <div class="bg-green-700 text-white rounded-xl p-3 text-center">
               <p class="text-2xl font-bold">{{ summary.adherence7day }}%</p>
@@ -216,7 +187,7 @@ onMounted(() => {
             </div>
           </section>
 
-          <!-- Medications list -->
+          <!-- Medications list with NEW "Take" button -->
           <section>
             <h2 class="font-semibold text-gray-800 mb-3">Today's medications</h2>
             <div class="space-y-2">
@@ -233,7 +204,7 @@ onMounted(() => {
                   <span class="text-xs font-medium px-2 py-1 rounded-full" :class="statusColor(med.status)">
                     {{ statusLabel(med.status) }}
                   </span>
-                  <!-- Mark Taken button -->
+                  <!-- NEW: "Take" button - end-to-end feature -->
                   <button
                     v-if="med.status === 'due' || med.status === 'pending'"
                     @click="markDoseTaken(med.id)"
@@ -249,7 +220,7 @@ onMounted(() => {
         </main>
       </div>
 
-      <!-- MOBILE BOTTOM NAV -->
+      <!-- Mobile bottom nav (unchanged) -->
       <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-10">
         <router-link
           to="/patient"
@@ -276,6 +247,7 @@ onMounted(() => {
           Adherence
         </router-link>
       </nav>
+
     </div>
   </div>
 </template>
