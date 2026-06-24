@@ -1,8 +1,11 @@
 <script setup>
+import { useAuthStore } from '@/stores/auth'
+
 const props = defineProps({
   open: Boolean
 })
 const emit = defineEmits(['close'])
+const auth = useAuthStore()
 </script>
 
 <template>
@@ -22,7 +25,7 @@ const emit = defineEmits(['close'])
     <!-- Header -->
     <div class="bg-green-700 px-5 py-5 flex items-start justify-between">
       <div>
-        <img src="@/assets/MediMinder_Logo_White.png" alt="MediMinder" width="120">
+        <img src="@/assets/MediMinder_Logo_White_v2.png" alt="MediMinder" width="200">
         <p class="text-green-100 text-xs mt-2">Good Morning, {{ auth.name }}</p>
       </div>
       <button
@@ -33,7 +36,7 @@ const emit = defineEmits(['close'])
     </div>
 
     <!-- Nav links — swap these per role -->
-    <nav class="flex flex-col gap-1 p-3 flex-1">
+    <nav class="flex flex-col gap-4 p-5 flex-1">
       <slot name="nav-links" />
     </nav>
   </aside>

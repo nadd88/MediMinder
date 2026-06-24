@@ -19,7 +19,7 @@ function handleSubmit() {
 
   if (role.value === 'Patient') router.push('/patient')
   else if (role.value === 'Caregiver') router.push('/caregiver')
-  else router.push('/admin/prescriptions')
+  else router.push('/admin/AdminLayout')
 }
 </script>
 

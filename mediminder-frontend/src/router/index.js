@@ -4,6 +4,9 @@ import PatientDashboard from '../views/patient/PatientDashboard.vue'
 import DoseLogView from '../views/patient/DoseLogView.vue'
 import AdheranceView from '../views/patient/AdheranceView.vue'
 import CaregiverDashboard from '../views/caregiver/CaregiverDashboard.vue'
+import AddPrescription from '../views/admin/AddPrescription.vue'
+import AdminLayout from "../views/admin/AdminLayout.vue"
+import AdherenceReport from "../views/admin/AdherenceReport.vue"
 
 
 const routes = [
@@ -12,6 +15,9 @@ const routes = [
   { path: '/caregiver', component: CaregiverDashboard },
   { path: '/patient/doses', component: DoseLogView },
   { path: '/patient/adherence', component: AdheranceView },
+  { path: '/admin/add-prescription', component: AddPrescription },
+  { path: '/admin/adherence-report', component: AdherenceReport },
+  { path: '/admin', component: AdminLayout }
 ]
 
 

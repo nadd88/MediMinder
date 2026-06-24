@@ -2,7 +2,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AdminLayout from './AdminLayout.vue'
-import api from '../../services/api'
+
 
 const route = useRoute()
 

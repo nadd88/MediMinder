@@ -1,17 +1,13 @@
 <script setup>
 import { ref } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import AppSidebar from '@/components/AppSidebar.vue'
+import { useSidebar } from '@/composables/useSidebar'
+
+const { sidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
 const auth = useAuthStore()
-const sidebarOpen = ref(false)
 
-function toggleSidebar() {
-  sidebarOpen.value = !sidebarOpen.value
-}
-
-function closeSidebar() {
-  sidebarOpen.value = false
-}
 
 const summary = ref({
   adherence7day: 87,
@@ -43,67 +39,39 @@ function statusLabel(status) {
 <template>
   <div class="min-h-screen bg-gray-50">
 
-    <!-- 1. OVERLAY — sits behind sidebar, closes it when tapped (mobile only) -->
-    <div
-      v-if="sidebarOpen"
-      class="fixed inset-0 bg-black/40 z-20 md:hidden"
-      @click="closeSidebar"
-    />
-
-    <!-- 2. SIDEBAR — slides in/out on ALL screen sizes -->
-    <aside
-      class="fixed top-0 left-0 h-full w-56 bg-white border-r border-gray-200 z-30 flex flex-col
-             transform transition-transform duration-300 ease-in-out"
-      :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-    >
-      <!-- Sidebar header -->
-      <div class="bg-green-700 px-5 py-5 flex items-start justify-between">
-        <div>
-          <img src="@/assets/MediMinder_Logo_White_v2.png" alt="MediMinder" width="200" height="200">
-          <p class="text-green-100 text-xs mt-2">Good Morning, {{ auth.name }}</p>
-        </div>
-        <button
-          @click="closeSidebar"
-          class="text-white/70 hover:text-white text-xl leading-none mt-0.5"
-          aria-label="Close sidebar"
-        >
-          ✕
-        </button>
-      </div>
-
-      <!-- Nav links -->
-      <nav class="flex flex-col gap-1 p-3 flex-1">
+    <!-- Sidebar -->
+    <AppSidebar :open="sidebarOpen" @close="closeSidebar">
+      <template #nav-links>
         <router-link
           to="/patient"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100"
-          active-class="bg-green-50 text-green-700 font-semibold"
           @click="closeSidebar"
+          class="block font-bold text-gray-700 px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 hover:text-gray-900"
+          active-class="font-bold text-green-700 bg-green-50"
         >
-          <img src="@/assets/home-icon.png" alt="" width="20" height="20">
           Dashboard
         </router-link>
+
         <router-link
           to="/patient/doses"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100"
-          active-class="bg-green-50 text-green-700 font-semibold"
           @click="closeSidebar"
+          class="block font-bold text-gray-700 px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 hover:text-gray-900"
+          active-class="font-bold text-green-700 bg-green-50"
         >
-          <img src="@/assets/pill-icon.png" alt="" width="20" height="20">
           Doses
         </router-link>
+
         <router-link
           to="/patient/adherence"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100"
-          active-class="bg-green-50 text-green-700 font-semibold"
           @click="closeSidebar"
+          class="block font-bold text-gray-700 px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 hover:text-gray-900"
+          active-class="font-bold text-green-700 bg-green-50"
         >
-          <img src="@/assets/adherence-icon.png" alt="" width="20" height="20">
           Adherence
         </router-link>
-      </nav>
-    </aside>
+      </template>
+    </AppSidebar>
 
-    <!-- 3. MAIN CONTENT -->
+    <!-- Main content -->
     <div class="flex flex-col min-h-screen">
 
       <!-- Top bar with hamburger -->
