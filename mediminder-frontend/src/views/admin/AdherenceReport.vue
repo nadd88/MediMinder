@@ -12,9 +12,9 @@ import {
   CategoryScale,
   LinearScale,
   Filler,
-} from 'chart.js'
+} from 'chart.js' 
 import AdminLayout from './AdminLayout.vue'
-import api from '../../services/api'
+
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale, Filler)
 
