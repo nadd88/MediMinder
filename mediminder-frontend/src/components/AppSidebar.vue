@@ -1,11 +1,19 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
   open: Boolean
 })
 const emit = defineEmits(['close'])
 const auth = useAuthStore()
+const router = useRouter()
+
+function handleLogout() {
+  auth.logout()
+  emit('close')
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -39,5 +47,16 @@ const auth = useAuthStore()
     <nav class="flex flex-col gap-4 p-5 flex-1">
       <slot name="nav-links" />
     </nav>
+
+    <!-- Footer / Logout -->
+    <div class="p-4 border-t">
+      <button
+        @click="handleLogout"
+        class="w-full flex items-center gap-2 text-left text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg"
+        aria-label="Log out"
+      >
+        Logout
+      </button>
+    </div>
   </aside>
 </template>

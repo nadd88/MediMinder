@@ -10,7 +10,7 @@ import AdherenceReport from "../views/admin/AdherenceReport.vue"
 
 
 const routes = [
-  { path: '/', component: LoginView },
+  { path: '/login', component: LoginView },
   { path: '/patient', component: PatientDashboard },
   { path: '/caregiver', component: CaregiverDashboard },
   { path: '/patient/doses', component: DoseLogView },
