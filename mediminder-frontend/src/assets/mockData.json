@@ -1,0 +1,36 @@
+{
+  "patient": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "patient@mediminder.com",
+    "role": "patient"
+  },
+  "summary": {
+    "adherence7day": 87,
+    "dueToday": 3,
+    "missedToday": 1
+  },
+  "medications": [
+    {
+      "id": 1,
+      "name": "Metformin 500mg",
+      "dose": "1 tablet",
+      "time": "8:00 AM",
+      "status": "taken"
+    },
+    {
+      "id": 2,
+      "name": "Lisinopril 10mg",
+      "dose": "1 tablet",
+      "time": "12:00 PM",
+      "status": "due"
+    },
+    {
+      "id": 3,
+      "name": "Aspirin 75mg",
+      "dose": "1 tablet",
+      "time": "9:00 PM",
+      "status": "missed"
+    }
+  ]
+}
