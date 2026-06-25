@@ -26,12 +26,23 @@ function askConfirm(med, action) {
   pending.value = { med, action }
 }
 
-function confirmAction() {
+async function confirmAction() {
   if (!pending.value) return
-  pending.value.med.status = pending.value.action  // 'taken' or 'skipped'
+
+  await mockApi.markDose(
+    pending.value.med.id,
+    pending.value.action
+  )
+
+  pending.value.med.status = pending.value.action
+
   if (pending.value.action === 'taken') {
-    pending.value.med.takenAt = new Date().toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit' })
+    pending.value.med.takenAt = new Date().toLocaleTimeString('en-MY', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
+
   pending.value = null
 }
 
