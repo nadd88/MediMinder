@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { useSidebar } from '@/composables/useSidebar'
@@ -60,6 +60,8 @@ async function markDoseTaken(medicationId) {
     error.value = 'Failed to mark dose. Please try again.'
   }
 }
+
+onMounted(loadDashboardData)
 
 // Helper functions (unchanged)
 function statusColor(status) {
