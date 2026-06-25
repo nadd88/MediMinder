@@ -135,7 +135,7 @@ Developed as part of the Cross-Platform Application Development Course.
 
 ### Contributors
 
-* Nada Ali
+* Nada Mohammed Ibrahim Ali
 * Fatima Yousra
 * Zahra Aulia
 * Lauza Amru
