@@ -8,6 +8,8 @@ import AddPrescription from '../views/admin/AddPrescription.vue'
 import AdminLayout from "../views/admin/AdminLayout.vue"
 import AdherenceReport from "../views/admin/AdherenceReport.vue"
 import RegisterView from '../views/RegisterView.vue'
+import CaregiverAlerts from '../views/caregiver/CaregiverAlerts.vue'
+import CaregiverPatients from '../views/caregiver/CaregiverPatients.vue'
 
 
 const routes = [
@@ -20,7 +22,9 @@ const routes = [
   { path: '/admin/add-prescription', component: AddPrescription },
   { path: '/admin/adherence-report', component: AdherenceReport },
   { path: '/admin', component: AdminLayout },
-  { path: '/register' , component: RegisterView }
+  { path: '/register' , component: RegisterView },
+  { path: '/caregiver/alerts' , component: CaregiverAlerts },
+  { path: '/caregiver/patients' , component: CaregiverPatients }
 ]
 
 
