@@ -2,15 +2,22 @@
 import { ref } from 'vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { useSidebar } from '@/composables/useSidebar'
+import { mockApi } from '../../api/mockClient'
+import { onMounted } from 'vue'
 
 const { sidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
-//Will be replaced with real API data later
-const medications = ref([
-  { id: 1, name: 'Metformin 500mg', dose: '1 tablet with food', time: '8:00 AM', status: 'taken', takenAt: '8:12 AM' },
-  { id: 2, name: 'Lisinopril 10mg', dose: '1 tablet before meal', time: '12:00 PM', status: 'due' },
-  { id: 3, name: 'Aspirin 75mg', dose: '1 tablet after meal', time: '9:00 PM', status: 'upcoming' },
-])
+const medications = ref([])
+
+async function loadDoses() {
+  const response = await mockApi.getDashboardData()
+
+  if (response.success) {
+    medications.value = response.data.medications
+  }
+}
+
+onMounted(loadDoses)
 
 // Which dose is waiting for confirmation, and what action
 const pending = ref(null) // will be { med, action } when a button is clicked
