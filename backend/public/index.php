@@ -54,6 +54,7 @@ $displayErrorDetails = $settings->get('displayErrorDetails');
 $logError = $settings->get('logError');
 $logErrorDetails = $settings->get('logErrorDetails');
 
+
 // Create Request object from globals
 $serverRequestCreator = ServerRequestCreatorFactory::create();
 $request = $serverRequestCreator->createServerRequestFromGlobals();
