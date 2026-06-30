@@ -14,8 +14,8 @@ return function (ContainerBuilder $containerBuilder) {
     $containerBuilder->addDefinitions([
         LoggerInterface::class => function (ContainerInterface $c) {
             $settings = $c->get(SettingsInterface::class);
-
             $loggerSettings = $settings->get('logger');
+            
             $logger = new Logger($loggerSettings['name']);
 
             $processor = new UidProcessor();
@@ -26,5 +26,18 @@ return function (ContainerBuilder $containerBuilder) {
 
             return $logger;
         },
+        
+        PDO::class => function (ContainerInterface $c) {
+            $settings = $c->get(SettingsInterface::class);
+            $db = $settings->get('db');
+
+            $dsn = "mysql:host={$db['host']};dbname={$db['dbname']};charset=utf8mb4";
+
+            return new PDO($dsn, $db['user'], $db['pass'], [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+            ]);
+        }
     ]);
 };
