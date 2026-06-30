@@ -134,6 +134,14 @@ function statusLabel(status) {
           >
             Adherence
           </router-link>
+          <router-link
+          to="/patient/medicine-supply"
+          @click="closeSidebar"
+          class="block font-bold text-gray-700 px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 hover:text-gray-900"
+          active-class="font-bold text-green-700 bg-green-50"
+        >
+          Supply
+        </router-link>
         </template>
       </AppSidebar>
 
@@ -217,33 +225,41 @@ function statusLabel(status) {
         </main>
       </div>
 
-      <!-- Mobile bottom nav (unchanged) -->
-      <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-10">
+    <!-- Bottom nav -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex">
         <router-link
-          to="/patient"
-          class="flex-1 flex flex-col items-center py-3 text-xs text-gray-500"
-          active-class="text-green-700 font-semibold"
+            to="/patient"
+            class="flex-1 flex flex-col items-center py-3 text-xs text-gray-500"
+            active-class="text-green-700 font-semibold"
         >
-          <img src="@/assets/home-icon.png" alt="Home" width="24" height="24">
-          Dashboard
+            <img src="@/assets/home-icon.png" alt="Home" width="24" height="24">
+            Dashboard
         </router-link>
         <router-link
-          to="/patient/doses"
-          class="flex-1 flex flex-col items-center py-3 text-xs text-gray-500"
-          active-class="text-green-700 font-semibold"
+            to="/patient/doses"
+            class="flex-1 flex flex-col items-center py-3 text-xs text-gray-500"
+            active-class="text-green-700 font-semibold"
         >
-          <img src="@/assets/pill-icon.png" alt="Doses" width="24" height="24">
-          Doses
+            <img src="@/assets/pill-icon.png" alt="Doses" width="24" height="24">
+            Doses
         </router-link>
         <router-link
-          to="/patient/adherence"
-          class="flex-1 flex flex-col items-center py-3 text-xs text-gray-500"
-          active-class="text-green-700 font-semibold"
+            to="/patient/adherence"
+            class="flex-1 flex flex-col items-center py-3 text-xs text-gray-500"
+            active-class="text-green-700 font-semibold"
         >
-          <img src="@/assets/adherence-icon.png" alt="Adherence" width="24" height="24">
-          Adherence
+            <img src="@/assets/adherence-icon.png" alt="Adherence" width="24" height="24">
+            Adherence
         </router-link>
-      </nav>
+        <router-link
+            to="/patient/medicine-supply"
+            class="flex-1 flex flex-col items-center py-3 text-xs text-gray-500"
+            active-class="text-green-700 font-semibold"
+        >
+            <img src="@/assets/supply.png" alt="Supply" width="24" height="24">
+            Supply
+        </router-link>
+</nav>
 
     </div>
   </div>
