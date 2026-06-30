@@ -10,6 +10,7 @@ import AdherenceReport from "../views/admin/AdherenceReport.vue"
 import RegisterView from '../views/RegisterView.vue'
 import CaregiverAlerts from '../views/caregiver/CaregiverAlerts.vue'
 import CaregiverPatients from '../views/caregiver/CaregiverPatients.vue'
+import PatientMedicineSupply from '../views/patient/PatientMedicineSupply.vue'
 
 
 const routes = [
@@ -24,7 +25,8 @@ const routes = [
   { path: '/admin', component: AdminLayout },
   { path: '/register' , component: RegisterView },
   { path: '/caregiver/alerts' , component: CaregiverAlerts },
-  { path: '/caregiver/patients' , component: CaregiverPatients }
+  { path: '/caregiver/patients' , component: CaregiverPatients },
+  { path: '/patient/medicine-supply', component: PatientMedicineSupply }
 ]
 
 

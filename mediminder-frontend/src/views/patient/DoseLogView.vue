@@ -82,6 +82,14 @@ function cancelAction() {
         >
           Adherence
         </router-link>
+        <router-link
+          to="/patient/medicine-supply"
+          @click="closeSidebar"
+          class="block font-bold text-gray-700 px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 hover:text-gray-900"
+          active-class="font-bold text-green-700 bg-green-50"
+        >
+          Supply
+        </router-link>
       </template>
     </AppSidebar>
 
@@ -178,6 +186,14 @@ function cancelAction() {
         >
             <img src="@/assets/adherence-icon.png" alt="Adherence" width="24" height="24">
             Adherence
+        </router-link>
+        <router-link
+            to="/patient/medicine-supply"
+            class="flex-1 flex flex-col items-center py-3 text-xs text-gray-500"
+            active-class="text-green-700 font-semibold"
+        >
+            <img src="@/assets/supply.png" alt="Supply" width="24" height="24">
+            Supply
         </router-link>
 </nav>
 

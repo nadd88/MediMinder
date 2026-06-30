@@ -87,6 +87,14 @@ function barColor(percent) {
         >
           Adherence
         </router-link>
+        <router-link
+          to="/patient/medicine-supply"
+          @click="closeSidebar"
+          class="block font-bold text-gray-700 px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 hover:text-gray-900"
+          active-class="font-bold text-green-700 bg-green-50"
+        >
+          Supply
+        </router-link>
       </template>
     </AppSidebar>
 
@@ -160,6 +168,7 @@ function barColor(percent) {
     </div>
 
     <!-- bottom navigation bar-->
+    <!-- Bottom nav -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex">
         <router-link
             to="/patient"
@@ -185,6 +194,14 @@ function barColor(percent) {
             <img src="@/assets/adherence-icon.png" alt="Adherence" width="24" height="24">
             Adherence
         </router-link>
-        </nav>
+        <router-link
+            to="/patient/medicine-supply"
+            class="flex-1 flex flex-col items-center py-3 text-xs text-gray-500"
+            active-class="text-green-700 font-semibold"
+        >
+            <img src="@/assets/supply.png" alt="Supply" width="24" height="24">
+            Supply
+        </router-link>
+</nav>
   </div>
 </template>
