@@ -15,6 +15,15 @@ class User
         return $user ?: null;
     }
 
+    public static function findById(int $id): ?array
+    {
+        $db = Database::getConnection();
+        $stmt = $db->prepare("SELECT id, name, email, role, dob FROM users WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $user = $stmt->fetch();
+        return $user ?: null;
+    }
+
     public static function create(string $name, string $email, string $passwordHash, string $role, ?string $dob): int
     {
         $db = Database::getConnection();
@@ -30,5 +39,19 @@ class User
             'dob' => $dob,
         ]);
         return (int) $db->lastInsertId();
+    }
+
+    public static function getPatientsForCaregiver(int $caregiverId): array
+    {
+        $db = Database::getConnection();
+        $stmt = $db->prepare("
+            SELECT * FROM users 
+            WHERE role = 'Patient' 
+            AND id IN (
+                SELECT patient_id FROM patient_caregiver WHERE caregiver_id = :caregiver_id
+            )
+        ");
+        $stmt->execute(['caregiver_id' => $caregiverId]);
+        return $stmt->fetchAll();
     }
 }

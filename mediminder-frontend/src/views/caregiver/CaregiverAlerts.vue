@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useRouter } from 'vue-router'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { useSidebar } from '@/composables/useSidebar'
+import { caregiverApi } from '../../api/caregiverApi'
 
 const { sidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
@@ -11,6 +12,8 @@ const auth = useAuthStore()
 const router = useRouter()
 
 const activeFilter = ref('all')
+const loading = ref(true)
+const error = ref('')
 
 const alerts = ref([
   {
@@ -104,6 +107,31 @@ function handleLogout() {
   auth.logout()
   router.push('/login')
 }
+
+async function loadAlerts() {
+  loading.value = true
+  error.value = ''
+  try {
+    const meds = await caregiverApi.getPatients()
+    alerts.value = (meds || []).map((med, index) => ({
+      id: index + 1,
+      patientName: med.patient_name || 'Linked patient',
+      type: index % 2 === 0 ? 'pending' : 'missed',
+      title: index % 2 === 0 ? 'Medication due' : 'Missed medication',
+      message: `${med.medicine_name || 'Medication'} is due for review.`,
+      time: 'Now',
+      date: 'Today',
+      read: false,
+    }))
+  } catch (err) {
+    console.error('Failed to load alerts:', err)
+    error.value = 'Unable to load alerts.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadAlerts)
 </script>
 
 <template>
@@ -167,8 +195,11 @@ function handleLogout() {
           >{{ f.label }}</button>
         </div>
 
+        <p v-if="error" class="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">{{ error }}</p>
+
         <!-- Alert list -->
-        <div class="space-y-3">
+        <div v-if="loading" class="rounded-xl bg-white p-4 text-sm text-gray-500 shadow-sm">Loading alerts…</div>
+        <div v-else class="space-y-3">
           <div
             v-for="alert in filtered"
             :key="alert.id"
