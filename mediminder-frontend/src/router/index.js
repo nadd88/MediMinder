@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import PatientDashboard from '../views/patient/PatientDashboard.vue'
 import DoseLogView from '../views/patient/DoseLogView.vue'
@@ -36,8 +36,12 @@ const routes = [
 ]
 
 
+// `window.Capacitor` is injected automatically by @capacitor/core at runtime
+// only when running inside the native app shell.
+const isNativeApp = typeof window !== 'undefined' && !!window.Capacitor?.isNativePlatform?.()
+
 const router = createRouter({
-  history: createWebHistory(),
+  history: isNativeApp ? createWebHashHistory() : createWebHistory(),
   routes,
 })
 

@@ -16,8 +16,28 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async login(email, password) {
-      const response = await authApi.login(email, password)
-      const { token, user } = response.data
+      try {
+        const response = await authApi.login(email, password)
+        const { token, user } = response.data
+
+        this.token = token
+        this.userId = user.id
+        this.name = user.name
+        this.email = user.email
+        this.role = user.role
+
+        localStorage.setItem('mediminder_token', token)
+        localStorage.setItem('mediminder_role', user.role)
+      } catch (error) {
+        console.error('Login failed', {
+          message: error?.message,
+          status: error?.response?.status,
+          data: error?.response?.data,
+          baseURL: error?.config?.baseURL,
+          url: error?.config?.url,
+        })
+        throw error
+      }
 
       this.token = token
       this.userId = user.id

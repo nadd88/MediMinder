@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MediMinder</string>
+    <string name="title_activity_main">MediMinder</string>
+    <string name="package_name">com.mediminder.app</string>
+    <string name="custom_url_scheme">com.mediminder.app</string>
+</resources>
