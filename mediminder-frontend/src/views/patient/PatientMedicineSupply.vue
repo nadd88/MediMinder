@@ -2,29 +2,34 @@
 import { ref, computed, onMounted } from 'vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { useSidebar } from '@/composables/useSidebar'
-import { mockApi } from '../../api/mockClient'
+import { patientApi } from '../../api/patientApi'
 
 const { sidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
 const LOW_STOCK_DAYS = 5
 
 const supplies = ref([])
+const loading = ref(true)
+const error = ref(null)
 
 async function loadSupplies() {
-  const response = await mockApi.getDashboardData()
-
-  if (response.success) {
-    // Reuse the same medication list as the dose log, with supply fields.
-    // Falls back to sane defaults if a med doesn't carry supply data yet.
-    supplies.value = response.data.medications.map(med => ({
-      id: med.id,
-      name: med.name,
-      dose: med.dose,
-      remaining: med.remaining ?? 10,
-      dailyDose: med.dailyDose ?? 1,
-      totalPack: med.totalPack ?? 30,
-      lastRefill: med.lastRefill ?? '—',
-    }))
+  loading.value = true
+  error.value = null
+  try {
+    const response = await patientApi.getSupply()
+    if (response.success) {
+      supplies.value = response.data.map(med => ({
+        ...med,
+        remaining: Number(med.remaining),
+        dailyDose: Number(med.dailyDose),
+        totalPack: Number(med.totalPack),
+      }))
+    }
+  } catch (err) {
+    console.error('Failed to load supplies:', err)
+    error.value = 'Failed to load medicine supply. Please try again.'
+  } finally {
+    loading.value = false
   }
 }
 
@@ -57,8 +62,7 @@ const sortedSupplies = computed(() =>
   [...supplies.value].sort((a, b) => daysLeft(a) - daysLeft(b))
 )
 
-// Which item is waiting for refill confirmation
-const pending = ref(null) // { med, amount }
+const pending = ref(null)
 
 function askRefill(med) {
   pending.value = { med, amount: med.totalPack }
@@ -69,7 +73,7 @@ async function confirmRefill() {
   const amt = Number(pending.value.amount)
   if (!amt || amt <= 0) return
 
-  await mockApi.markDose(pending.value.med.id, 'refill')
+  await patientApi.refillSupply(pending.value.med.id, amt)
 
   const item = supplies.value.find(i => i.id === pending.value.med.id)
   if (item) {
@@ -156,7 +160,7 @@ function cancelRefill() {
             {{ lowStockItems.length }} medication{{ lowStockItems.length > 1 ? 's' : '' }} running low
           </p>
           <p class="text-sm text-amber-700 mt-0.5">
-            {{ lowStockItems.map(i => i.name).join(', ') }} — refill soon to avoid missed doses.
+            {{ lowStockItems.map(i => i.name).join(', ') }} - refill soon to avoid missed doses.
           </p>
         </div>
 
@@ -200,7 +204,7 @@ function cancelRefill() {
 
           <div class="flex justify-between items-center">
             <p class="text-sm text-gray-400">
-              {{ item.remaining }} of {{ item.totalPack }} left · last refill {{ item.lastRefill }}
+              {{ item.remaining }} of {{ item.totalPack }} left - last refill {{ item.lastRefill }}
             </p>
             <button
               class="py-2 px-3 rounded-lg bg-green-50 text-green-700 text-sm font-medium hover:bg-green-100"

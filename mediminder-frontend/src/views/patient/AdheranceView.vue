@@ -1,30 +1,47 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { Bar, Line } from 'vue-chartjs'
+import { ref, computed, onMounted, watch } from 'vue'
+import { Bar } from 'vue-chartjs'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { useSidebar } from '@/composables/useSidebar'
+import { patientApi } from '../../api/patientApi'
 
 const { sidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
-const range = ref('7')  // '7' or '30'
+const range = ref('7')
+const loading = ref(true)
+const error = ref(null)
+const overall = ref(0)
+const labels = ref([])
+const values = ref([])
+const byMedication = ref([])
 
-const sevenDayData = {
-  labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-  values: [80, 100, 60, 85, 100, 70, 87],
+async function loadAdherence() {
+  loading.value = true
+  error.value = null
+  try {
+    const response = await patientApi.getAdherence(range.value)
+    if (response.success) {
+      overall.value = response.data.overall
+      labels.value = response.data.labels
+      values.value = response.data.values
+      byMedication.value = response.data.byMedication
+    }
+  } catch (err) {
+    console.error('Failed to load adherence:', err)
+    error.value = 'Failed to load adherence report. Please try again.'
+  } finally {
+    loading.value = false
+  }
 }
 
-const thirtyDayData = {
-  labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'],
-  values: [82, 75, 90, 87],
-}
-
-const currentData = computed(() => range.value === '7' ? sevenDayData : thirtyDayData)
+onMounted(loadAdherence)
+watch(range, loadAdherence)
 
 const chartData = computed(() => ({
-  labels: currentData.value.labels,
+  labels: labels.value,
   datasets: [{
     label: 'Adherence %',
-    data: currentData.value.values,
+    data: values.value,
     backgroundColor: '#a9d6b8',
     borderColor: '#236239',
     borderRadius: 6,
@@ -42,19 +59,13 @@ const chartOptions = {
   },
 }
 
-// Per medication breakdown
-const byMedication = [
-  { name: 'Metformin 500mg', percent: 95 },
-  { name: 'Lisinopril 10mg', percent: 80 },
-  { name: 'Aspirin 75mg', percent: 60 },
-]
-
 function barColor(percent) {
   if (percent >= 85) return 'bg-green-600'
   if (percent >= 60) return 'bg-amber-500'
   return 'bg-red-500'
 }
 </script>
+
 
 <template>
   <div class="min-h-screen bg-gray-50">
@@ -136,8 +147,9 @@ function barColor(percent) {
       </div>
 
       <!-- Chart -->
-      <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
-        <p class="text-3xl font-bold text-green-700 mb-1">87%</p>
+      <div v-if="error" class="bg-red-50 text-red-700 rounded-xl p-4 mb-4 text-sm">{{ error }}</div>
+      <div v-else class="bg-white rounded-xl shadow-sm p-4 mb-4">
+        <p class="text-3xl font-bold text-green-700 mb-1">{{ overall }}%</p>
         <p class="text-sm text-gray-500 mb-4">Overall adherence this period</p>
         <div style="height: 180px;">
           <Bar :data="chartData" :options="chartOptions" />
@@ -205,3 +217,4 @@ function barColor(percent) {
 </nav>
   </div>
 </template>
+

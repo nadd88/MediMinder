@@ -3,17 +3,16 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { useSidebar } from '@/composables/useSidebar'
-import { mockApi } from '../../api/mockClient'  // ← NEW: API integration
-// NEW means backend integration has been added to this component
+import { patientApi } from '../../api/patientApi'
 
 const { sidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 const auth = useAuthStore()
 
-//  NEW: Loading and error states
+// Loading and error states
 const loading = ref(true)
 const error = ref(null)
 
-// NEW: Data from API (replacing hardcoded data)
+// Data from API
 const summary = ref({
   adherence7day: 87,
   dueToday: 3,
@@ -22,13 +21,13 @@ const summary = ref({
 
 const medications = ref([])
 
-// NEW:Load data from mock API
+// Load data from API
 async function loadDashboardData() {
   loading.value = true
   error.value = null
   
   try {
-    const response = await mockApi.getDashboardData()
+    const response = await patientApi.getDashboardData()
     if (response.success) {
       summary.value = response.data.summary
       medications.value = response.data.medications
@@ -41,17 +40,17 @@ async function loadDashboardData() {
   }
 }
 
-// NEW: Mark dose as taken (end-to-end feature)
+// Mark dose as taken
 async function markDoseTaken(medicationId) {
   try {
-    const response = await mockApi.markDose(medicationId, 'taken')
+    const response = await patientApi.markDose(medicationId, 'taken')
     if (response.success) {
       // Update the local state
       const med = medications.value.find(m => m.id === medicationId)
       if (med) {
         med.status = 'taken'
         // Update summary counts
-        summary.value.dueToday = medications.value.filter(m => m.status === 'due').length
+        summary.value.dueToday = medications.value.filter(m => m.status === 'pending').length
         summary.value.missedToday = medications.value.filter(m => m.status === 'missed').length
       }
     }
@@ -66,14 +65,14 @@ onMounted(loadDashboardData)
 // Helper functions (unchanged)
 function statusColor(status) {
   if (status === 'taken') return 'bg-green-100 text-green-700'
-  if (status === 'due') return 'bg-amber-100 text-amber-700'
+  if (status === 'pending') return 'bg-amber-100 text-amber-700'
   if (status === 'missed') return 'bg-red-100 text-red-700'
   return 'bg-gray-100 text-gray-500'
 }
 
 function statusLabel(status) {
   if (status === 'taken') return 'Taken'
-  if (status === 'due') return 'Due now'
+  if (status === 'pending') return 'Due now'
   if (status === 'missed') return 'Missed'
   return 'Upcoming'
 }
@@ -82,7 +81,7 @@ function statusLabel(status) {
 <template>
   <div class="min-h-screen bg-gray-50">
 
-    <!-- NEW: Loading State -->
+    <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center min-h-screen">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
@@ -90,10 +89,10 @@ function statusLabel(status) {
       </div>
     </div>
 
-    <!-- NEW: Error State -->
+    <!-- Error State -->
     <div v-else-if="error" class="flex items-center justify-center min-h-screen">
       <div class="text-center p-6 bg-red-50 rounded-xl max-w-md">
-        <p class="text-red-600">⚠️ {{ error }}</p>
+        <p class="text-red-600">{{ error }}</p>
         <button 
           @click="loadDashboardData" 
           class="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
@@ -103,9 +102,9 @@ function statusLabel(status) {
       </div>
     </div>
 
-    <!-- Main Content (unchanged structure, data now comes from API) -->
+    <!-- Main Content -->
     <div v-else>
-      <!-- Sidebar (unchanged) -->
+      <!-- Sidebar -->
       <AppSidebar :open="sidebarOpen" @close="closeSidebar">
         <template #nav-links>
           <router-link
@@ -148,7 +147,7 @@ function statusLabel(status) {
       <!-- Main content -->
       <div class="flex flex-col min-h-screen">
 
-        <!-- Top bar (unchanged) -->
+        <!-- Top bar -->
         <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
           <button
             @click="toggleSidebar"
@@ -167,7 +166,7 @@ function statusLabel(status) {
           </p>
         </header>
 
-        <!-- Mobile greeting (unchanged) -->
+        <!-- Mobile greeting -->
         <div class="md:hidden bg-green-700 px-4 pt-4 pb-8">
           <p class="text-sm text-white/80">Good Morning,</p>
           <h1 class="text-xl font-bold text-white">{{ auth.name }}</h1>
@@ -192,7 +191,7 @@ function statusLabel(status) {
             </div>
           </section>
 
-          <!-- Medications list with NEW "Take" button -->
+          <!-- Medications list -->
           <section>
             <h2 class="font-semibold text-gray-800 mb-3">Today's medications</h2>
             <div class="space-y-2">
@@ -203,15 +202,15 @@ function statusLabel(status) {
               >
                 <div>
                   <p class="font-medium text-gray-900">{{ med.name }}</p>
-                  <p class="text-sm text-gray-500">{{ med.dose }} · {{ med.time }}</p>
+                  <p class="text-sm text-gray-500">{{ med.dose }} - {{ med.time }}</p>
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-medium px-2 py-1 rounded-full" :class="statusColor(med.status)">
                     {{ statusLabel(med.status) }}
                   </span>
-                  <!-- NEW: "Take" button - end-to-end feature -->
+                  
                   <button
-                    v-if="med.status === 'due' || med.status === 'pending'"
+                    v-if="med.status === 'pending'"
                     @click="markDoseTaken(med.id)"
                     class="text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg hover:bg-green-600 transition-colors"
                   >
@@ -264,3 +263,4 @@ function statusLabel(status) {
     </div>
   </div>
 </template>
+
