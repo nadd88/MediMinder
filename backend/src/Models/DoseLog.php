@@ -41,6 +41,7 @@ class DoseLog
     public static function getAdherenceStats(int $patientId, int $days = 30): array
     {
         $db = Database::getConnection();
+        $cutoff = date('Y-m-d H:i:s', strtotime("-{$days} days"));
         $stmt = $db->prepare("
             SELECT 
                 COUNT(*) as total_doses,
@@ -48,9 +49,9 @@ class DoseLog
                 SUM(CASE WHEN status = 'Missed' THEN 1 ELSE 0 END) as missed_doses
             FROM dose_logs
             WHERE patient_id = :patient_id 
-            AND created_at >= DATE_SUB(NOW(), INTERVAL :days DAY)
+            AND created_at >= :cutoff
         ");
-        $stmt->execute(['patient_id' => $patientId, 'days' => $days]);
+        $stmt->execute(['patient_id' => $patientId, 'cutoff' => $cutoff]);
         $result = $stmt->fetch();
         
         $total = (int)($result['total_doses'] ?? 0);
@@ -67,6 +68,7 @@ class DoseLog
     public static function getWeeklyAdherence(int $patientId): array
     {
         $db = Database::getConnection();
+        $cutoff = date('Y-m-d H:i:s', strtotime('-7 days'));
         $stmt = $db->prepare("
             SELECT 
                 DATE(created_at) as date,
@@ -74,11 +76,11 @@ class DoseLog
                 SUM(CASE WHEN status = 'Taken' THEN 1 ELSE 0 END) as taken
             FROM dose_logs
             WHERE patient_id = :patient_id 
-            AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            AND created_at >= :cutoff
             GROUP BY DATE(created_at)
             ORDER BY date ASC
         ");
-        $stmt->execute(['patient_id' => $patientId]);
+        $stmt->execute(['patient_id' => $patientId, 'cutoff' => $cutoff]);
         return $stmt->fetchAll();
     }
 }

@@ -122,6 +122,19 @@ class Database
                     FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE
                 )
             ");
+
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS patient_caregiver (
+                    id SERIAL PRIMARY KEY,
+                    patient_id INTEGER NOT NULL,
+                    caregiver_id INTEGER NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'active',
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (patient_id, caregiver_id),
+                    FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (caregiver_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            ");
         } else {
             // SQLite schema
             $db->exec(
@@ -166,6 +179,19 @@ class Database
                     FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE
                 )"
             );
+
+            $db->exec(
+                "CREATE TABLE IF NOT EXISTS patient_caregiver (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    patient_id INTEGER NOT NULL,
+                    caregiver_id INTEGER NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'active',
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (patient_id, caregiver_id),
+                    FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (caregiver_id) REFERENCES users(id) ON DELETE CASCADE
+                )"
+            );
         }
     }
 
@@ -201,6 +227,24 @@ class Database
         $patientStmt = $db->prepare("SELECT id FROM users WHERE email = ?");
         $patientStmt->execute(['patient@email.com']);
         $patientId = (int) $patientStmt->fetchColumn();
+
+        $caregiverStmt = $db->prepare("SELECT id FROM users WHERE email = ?");
+        $caregiverStmt->execute(['caregiver@email.com']);
+        $caregiverId = (int) $caregiverStmt->fetchColumn();
+
+        if ($patientId > 0 && $caregiverId > 0) {
+            $linkCheckStmt = $db->prepare(
+                'SELECT id FROM patient_caregiver WHERE patient_id = :patient_id AND caregiver_id = :caregiver_id'
+            );
+            $linkCheckStmt->execute(['patient_id' => $patientId, 'caregiver_id' => $caregiverId]);
+
+            if (!$linkCheckStmt->fetch()) {
+                $linkStmt = $db->prepare(
+                    "INSERT INTO patient_caregiver (patient_id, caregiver_id, status) VALUES (:patient_id, :caregiver_id, 'active')"
+                );
+                $linkStmt->execute(['patient_id' => $patientId, 'caregiver_id' => $caregiverId]);
+            }
+        }
         
         if ($patientId <= 0) {
             return;
