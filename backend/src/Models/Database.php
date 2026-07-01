@@ -259,8 +259,5 @@ class Database
             }
         }
     }
-    }
 }
-
-
 
