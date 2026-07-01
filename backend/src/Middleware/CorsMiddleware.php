@@ -13,33 +13,39 @@ class CorsMiddleware
     {
         $origin = $request->getHeaderLine('Origin');
         
-        if ($request->getMethod() === 'OPTIONS') {
-            $response = new SlimResponse(204);
-            return $this->addCorsHeaders($response, $origin);
-        }
-
-        $response = $handler->handle($request);
-        return $this->addCorsHeaders($response, $origin);
-    }
-
-    private function addCorsHeaders(Response $response, string $origin = ''): Response
-    {
         // Whitelist of allowed origins
         $allowedOrigins = [
             'http://localhost:5173',
             'http://localhost:3000',
             'https://medi-minder-hazel.vercel.app',
-            'https://medi-minder-fkr7kbh0n-nadd88s-projects.vercel.app'
         ];
         
         // Check if origin is allowed
-        $allowOrigin = in_array($origin, $allowedOrigins) ? $origin : '';
+        $isAllowed = in_array($origin, $allowedOrigins);
+        
+        // Handle preflight OPTIONS requests
+        if ($request->getMethod() === 'OPTIONS') {
+            $response = new SlimResponse(200);
+            if ($isAllowed) {
+                $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
+            }
+            return $response
+                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->withHeader('Access-Control-Allow-Credentials', 'true');
+        }
+
+        // Handle actual requests
+        $response = $handler->handle($request);
+        
+        if ($isAllowed) {
+            $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
+        }
         
         return $response
-            ->withHeader('Access-Control-Allow-Origin', $allowOrigin)
             ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
             ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->withHeader('Access-Control-Allow-Credentials', 'true')
-            ->withHeader('Vary', 'Origin');
+            ->withHeader('Access-Control-Allow-Credentials', 'true');
     }
 }
+
