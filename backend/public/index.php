@@ -22,17 +22,34 @@ $app->add(new App\Middleware\CorsMiddleware());
 $app->addBodyParsingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
+// --- UPDATED CORS MIDDLEWARE SECTION ---
 $app->add(function ($request, $handler) {
     $response = $handler->handle($request);
+    
+    // Extract the origin domain requesting your API
+    $origin = $request->getHeaderLine('Origin');
+    
+    // Add your trusted local development and production Vercel URLs here
+    $allowedOrigins = [
+        'http://localhost:5173',
+        'https://medi-minder-fkr7kbh0n-nadd88s-projects.vercel.app'
+    ];
+    
+    // If the browser's origin is allowed, pass it into the Access-Control header
+    if (in_array($origin, $allowedOrigins)) {
+        $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
+    }
+    
     return $response
-        ->withHeader('Access-Control-Allow-Origin', 'http://localhost:5173')
         ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
-        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+        ->withHeader('Access-Control-Allow-Credentials', 'true');
 });
 
 $app->options('/{routes:.+}', function ($request, $response) {
     return $response;
 });
+// ---------------------------------------
 
 $app->get('/', function ($request, $response) {
     $response->getBody()->write(json_encode(['message' => 'MediMinder API is running']));
