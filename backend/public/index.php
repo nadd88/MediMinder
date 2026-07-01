@@ -16,11 +16,11 @@ if (class_exists('Dotenv\\Dotenv')) {
 
 $app = AppFactory::create();
 
-// Add CORS Middleware
-$app->add(new App\Middleware\CorsMiddleware());
-
 $app->addBodyParsingMiddleware();
 $app->addErrorMiddleware(true, true, true);
+
+// Add CORS Middleware LAST so it wraps everything (including error middleware)
+$app->add(new App\Middleware\CorsMiddleware());
 
 $app->get('/', function ($request, $response) {
     $response->getBody()->write(json_encode(['message' => 'MediMinder API is running']));
