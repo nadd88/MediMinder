@@ -1,147 +1,103 @@
 # MediMinder
 
+MediMinder is a web-based medication management platform designed for patients, caregivers, and administrators. It brings together medication schedules, dose tracking, adherence monitoring, caregiver coordination, and basic admin management in one simple experience.
+
 ## Overview
 
-MediMinder is a medication management system that helps patients manage their medication schedules, track adherence, and receive reminders. The system also supports caregiver monitoring to improve medication compliance and patient safety.
+The app is built to help users stay on top of medication routines and support better treatment follow-through. Patients can review their medications, update dose status, and view progress over time. Caregivers can monitor linked patients, while administrators can access overview and prescription-related workflows.
 
-## Technologies Used
+## Main features
 
-* Vue 3
-* Vite
-* Vue Router
-* Pinia
-* Tailwind CSS
-* JavaScript
+### Patient experience
+- Medication dashboard with daily medication overview
+- Dose tracking with status updates such as taken, pending, or missed
+- Medication supply overview
+- Adherence reporting for recent periods
+- Clean, mobile-friendly interface for everyday use
 
----
+### Caregiver experience
+- View linked patients
+- Monitor medication-related activity for assigned patients
+- Review patient medication overview and recent status updates
+- Access caregiver-specific alerts and patient summaries
 
-## Prerequisites
+### Admin experience
+- Admin dashboard overview
+- Patient and prescription management views
+- Prescription-related navigation and management workflows
 
-Before running the project, ensure the following software is installed:
+## Tech stack
 
-* Node.js (v18 or later recommended)
-* npm (comes with Node.js)
-* Git
+### Frontend
+- Vue 3
+- Vite
+- Vue Router
+- Pinia
+- Tailwind CSS
 
-Check installation:
+### Backend
+- PHP with Slim 4
+- JWT-based authentication
+- SQLite by default for local development
+
+## Project structure
+
+- backend/ — PHP API, controllers, models, and database setup
+- mediminder-frontend/ — Vue frontend application and UI views
+- README.md — project overview and setup instructions
+
+## Requirements
+
+Before running the project, make sure you have:
+
+- Node.js 18 or newer
+- npm
+- PHP 8.2 or newer
+- Composer
+
+## Local setup
+
+### 1. Start the backend
 
 ```bash
-node -v
-npm -v
-git --version
+cd backend
+composer install
+php -S localhost:8000 -t public
 ```
 
----
+The API will be available at:
 
-## Clone the Repository
-
-```bash
-git clone https://github.com/nadd88/MediMinder
-cd MediMinder
+```text
+http://localhost:8000
 ```
 
-## Install Dependencies
-
-Install all required packages:
+### 2. Start the frontend
 
 ```bash
+cd mediminder-frontend
 npm install
+npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
----
-
-## Running the Development Server
-
-Start the Vite development server:
-
-```bash
-npm run dev
-```
-
-The application will be available at:
+Open the app in your browser at:
 
 ```text
 http://localhost:5173
 ```
 
-Open the URL in your browser.
+## Demo accounts
 
----
+A sample patient account is already available for quick testing:
 
-## Build for Production
+- Email: patient@email.com
+- Password: password123
 
-To create a production build:
+## Notes
 
-```bash
-npm run build
-```
-
-The compiled files will be generated in the `dist` folder.
-
----
-
-## Preview Production Build
-
-To preview the production build locally:
-
-```bash
-npm run preview
-```
-
-
-## Mock Data
-
-The current prototype uses mock data located in:
-
-```text
-src/api/mockClient.json
-```
-
-Mock API functions are implemented in:
-
-```text
-src/api/mockClient.js
-```
-
-These files simulate backend responses while the actual backend is under development.
-
----
-
-## Features Implemented
-
-### Patient Dashboard
-
-* View medication summary
-* View adherence statistics
-* View due and missed doses
-
-### Dose Management
-
-* Mark doses as taken
-* Skip doses
-* View medication schedule
-* Track medication status
-
-### Adherence Tracking
-
-* Weekly adherence summary
-* Missed dose monitoring
-
----
-
-## Team
-
-Developed as part of the Cross-Platform Application Development Course.
-
-### Contributors
-
-* Nada Mohammed Ibrahim Ali
-* Fatima Yousra
-* Zahra Aulia
-* Lauza Amru
-
----
+- The backend uses SQLite by default and creates the local database automatically on first run.
+- The frontend is configured to communicate with the backend at http://localhost:8000.
+- The current project is suitable for local development and demo purposes.
 
 ## License
 
-This project is intended for academic and educational purposes only.
+This project is intended for academic and educational use.
