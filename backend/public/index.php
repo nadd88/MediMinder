@@ -1,83 +1,62 @@
 <?php
 
-declare(strict_types=1);
-
-use App\Application\Handlers\HttpErrorHandler;
-use App\Application\Handlers\ShutdownHandler;
-use App\Application\ResponseEmitter\ResponseEmitter;
-use App\Application\Settings\SettingsInterface;
-use DI\ContainerBuilder;
 use Slim\Factory\AppFactory;
-use Slim\Factory\ServerRequestCreatorFactory;
+use App\Controllers\AuthController;
+use App\Middleware\AuthMiddleware;
+use App\Middleware\RoleMiddleware;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-// Instantiate PHP-DI ContainerBuilder
-$containerBuilder = new ContainerBuilder();
+// Load .env
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
 
-if (false) { // Should be set to true in production
-	$containerBuilder->enableCompilation(__DIR__ . '/../var/cache');
-}
-
-// Set up settings
-$settings = require __DIR__ . '/../app/settings.php';
-$settings($containerBuilder);
-
-// Set up dependencies
-$dependencies = require __DIR__ . '/../app/dependencies.php';
-$dependencies($containerBuilder);
-
-// Set up repositories
-$repositories = require __DIR__ . '/../app/repositories.php';
-$repositories($containerBuilder);
-
-// Build PHP-DI Container instance
-$container = $containerBuilder->build();
-
-// Instantiate the app
-AppFactory::setContainer($container);
 $app = AppFactory::create();
-$callableResolver = $app->getCallableResolver();
 
-// Register middleware
-$middleware = require __DIR__ . '/../app/middleware.php';
-$middleware($app);
-
-// Register routes
-$routes = require __DIR__ . '/../app/routes.php';
-$routes($app);
-
-/** @var SettingsInterface $settings */
-$settings = $container->get(SettingsInterface::class);
-
-$displayErrorDetails = $settings->get('displayErrorDetails');
-$logError = $settings->get('logError');
-$logErrorDetails = $settings->get('logErrorDetails');
-
-
-// Create Request object from globals
-$serverRequestCreator = ServerRequestCreatorFactory::create();
-$request = $serverRequestCreator->createServerRequestFromGlobals();
-
-// Create Error Handler
-$responseFactory = $app->getResponseFactory();
-$errorHandler = new HttpErrorHandler($callableResolver, $responseFactory);
-
-// Create Shutdown Handler
-$shutdownHandler = new ShutdownHandler($request, $errorHandler, $displayErrorDetails);
-register_shutdown_function($shutdownHandler);
-
-// Add Routing Middleware
-$app->addRoutingMiddleware();
-
-// Add Body Parsing Middleware
 $app->addBodyParsingMiddleware();
+$app->addErrorMiddleware(true, true, true);
 
-// Add Error Middleware
-$errorMiddleware = $app->addErrorMiddleware($displayErrorDetails, $logError, $logErrorDetails);
-$errorMiddleware->setDefaultErrorHandler($errorHandler);
+// --- CORS middleware ---
+$app->add(function ($request, $handler) {
+    $response = $handler->handle($request);
+    return $response
+        ->withHeader('Access-Control-Allow-Origin', 'http://localhost:5173')
+        ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+});
 
-// Run App & Emit Response
-$response = $app->handle($request);
-$responseEmitter = new ResponseEmitter();
-$responseEmitter->emit($response);
+// Handle CORS preflight (OPTIONS) requests
+$app->options('/{routes:.+}', function ($request, $response) {
+    return $response;
+});
+
+// Test route
+$app->get('/', function ($request, $response) {
+    $response->getBody()->write(json_encode(['message' => 'MediMinder API is running']));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+// Auth routes
+$app->post('/auth/register', [AuthController::class, 'register']);
+$app->post('/auth/login', [AuthController::class, 'login']);
+
+// Example protected routes (any logged-in user)
+$app->get('/me', function ($request, $response) {
+    $userId = $request->getAttribute('user_id');
+    $role = $request->getAttribute('user_role');
+    $response->getBody()->write(json_encode([
+        'message' => 'You are authenticated',
+        'user_id' => $userId,
+        'role' => $role,
+    ]));
+    return $response->withHeader('Content-Type', 'application/json');
+})->add(new AuthMiddleware());
+
+// Example admin-only route
+$app->get('/admin/test', function ($request, $response) {
+    $response->getBody()->write(json_encode(['message' => 'Welcome, Admin']));
+    return $response->withHeader('Content-Type', 'application/json');
+})->add(new RoleMiddleware(['Admin']))
+  ->add(new AuthMiddleware());
+
+$app->run();
