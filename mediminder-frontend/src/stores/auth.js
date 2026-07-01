@@ -38,15 +38,6 @@ export const useAuthStore = defineStore('auth', {
         })
         throw error
       }
-
-      this.token = token
-      this.userId = user.id
-      this.name = user.name
-      this.email = user.email
-      this.role = user.role
-
-      localStorage.setItem('mediminder_token', token)
-      localStorage.setItem('mediminder_role', user.role)
     },
 
     async register(payload) {
