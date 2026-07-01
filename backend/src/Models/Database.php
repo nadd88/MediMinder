@@ -12,37 +12,59 @@ class Database
     public static function getConnection(): PDO
     {
         if (self::$instance === null) {
-            $driver = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? 'sqlite');
-
+            // Check for Render's DATABASE_URL first (PostgreSQL)
+            $databaseUrl = getenv('DATABASE_URL');
+            
             try {
-                if ($driver === 'sqlite') {
-                    $dbPath = dirname(__DIR__, 1) . '/database/mediminder.sqlite';
-                    $directory = dirname($dbPath);
-
-                    if (!is_dir($directory)) {
-                        mkdir($directory, 0777, true);
-                    }
-
-                    self::$instance = new PDO("sqlite:$dbPath", null, null, [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    ]);
-                    self::$instance->exec('PRAGMA foreign_keys = ON');
-                    self::ensureSchema(self::$instance);
-                    self::ensureSeedData(self::$instance);
-                } else {
-                    $host = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? '127.0.0.1');
-                    $dbname = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'mediminder');
-                    $user = getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? 'root');
-                    $pass = getenv('DB_PASS') ?: ($_ENV['DB_PASS'] ?? '');
-
-                    $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
-
+                if ($databaseUrl) {
+                    // Parse Render's DATABASE_URL format: postgresql://user:password@host:port/database
+                    $dbUrlParts = parse_url($databaseUrl);
+                    
+                    $host = $dbUrlParts['host'] ?? 'localhost';
+                    $port = $dbUrlParts['port'] ?? 5432;
+                    $dbname = ltrim($dbUrlParts['path'] ?? '/mediminder', '/');
+                    $user = $dbUrlParts['user'] ?? 'postgres';
+                    $pass = $dbUrlParts['pass'] ?? '';
+                    
+                    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
+                    
                     self::$instance = new PDO($dsn, $user, $pass, [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     ]);
+                } else {
+                    $driver = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? 'sqlite');
+
+                    if ($driver === 'sqlite') {
+                        $dbPath = dirname(__DIR__, 1) . '/database/mediminder.sqlite';
+                        $directory = dirname($dbPath);
+
+                        if (!is_dir($directory)) {
+                            mkdir($directory, 0777, true);
+                        }
+
+                        self::$instance = new PDO("sqlite:$dbPath", null, null, [
+                            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        ]);
+                        self::$instance->exec('PRAGMA foreign_keys = ON');
+                    } else {
+                        $host = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? '127.0.0.1');
+                        $dbname = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'mediminder');
+                        $user = getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? 'root');
+                        $pass = getenv('DB_PASS') ?: ($_ENV['DB_PASS'] ?? '');
+
+                        $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
+
+                        self::$instance = new PDO($dsn, $user, $pass, [
+                            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        ]);
+                    }
                 }
+                
+                self::ensureSchema(self::$instance);
+                self::ensureSeedData(self::$instance);
             } catch (PDOException $e) {
                 error_log($e->getMessage());
                 throw new PDOException('Database connection failed: ' . $e->getMessage());
@@ -54,61 +76,118 @@ class Database
 
     private static function ensureSchema(PDO $db): void
     {
-        $db->exec(
-            "CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                role TEXT NOT NULL,
-                dob TEXT NULL
-            )"
-        );
+        $driver = $db->getAttribute(PDO::ATTR_DRIVER_NAME);
+        
+        if ($driver === 'pgsql') {
+            // PostgreSQL schema
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    dob TEXT NULL
+                )
+            ");
 
-        $db->exec(
-            "CREATE TABLE IF NOT EXISTS medications (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                patient_id INTEGER NOT NULL,
-                medicine_name TEXT NOT NULL,
-                dosage TEXT NOT NULL,
-                frequency TEXT NOT NULL,
-                schedule_time TEXT NOT NULL,
-                instructions TEXT,
-                remaining_quantity INTEGER NOT NULL DEFAULT 30,
-                status TEXT NOT NULL DEFAULT 'Pending',
-                last_refill TEXT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE
-            )"
-        );
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS medications (
+                    id SERIAL PRIMARY KEY,
+                    patient_id INTEGER NOT NULL,
+                    medicine_name TEXT NOT NULL,
+                    dosage TEXT NOT NULL,
+                    frequency TEXT NOT NULL,
+                    schedule_time TEXT NOT NULL,
+                    instructions TEXT,
+                    remaining_quantity INTEGER NOT NULL DEFAULT 30,
+                    status TEXT NOT NULL DEFAULT 'Pending',
+                    last_refill TEXT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            ");
 
-        $db->exec(
-            "CREATE TABLE IF NOT EXISTS dose_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                medication_id INTEGER NOT NULL,
-                patient_id INTEGER NOT NULL,
-                status TEXT NOT NULL DEFAULT 'Pending',
-                scheduled_at TEXT NOT NULL,
-                taken_at TEXT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE (medication_id, patient_id, scheduled_at),
-                FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE,
-                FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE
-            )"
-        );
+            $db->exec("
+                CREATE TABLE IF NOT EXISTS dose_logs (
+                    id SERIAL PRIMARY KEY,
+                    medication_id INTEGER NOT NULL,
+                    patient_id INTEGER NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'Pending',
+                    scheduled_at TEXT NOT NULL,
+                    taken_at TEXT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (medication_id, patient_id, scheduled_at),
+                    FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE,
+                    FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            ");
+        } else {
+            // SQLite schema
+            $db->exec(
+                "CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    dob TEXT NULL
+                )"
+            );
+
+            $db->exec(
+                "CREATE TABLE IF NOT EXISTS medications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    patient_id INTEGER NOT NULL,
+                    medicine_name TEXT NOT NULL,
+                    dosage TEXT NOT NULL,
+                    frequency TEXT NOT NULL,
+                    schedule_time TEXT NOT NULL,
+                    instructions TEXT,
+                    remaining_quantity INTEGER NOT NULL DEFAULT 30,
+                    status TEXT NOT NULL DEFAULT 'Pending',
+                    last_refill TEXT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE
+                )"
+            );
+
+            $db->exec(
+                "CREATE TABLE IF NOT EXISTS dose_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    medication_id INTEGER NOT NULL,
+                    patient_id INTEGER NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'Pending',
+                    scheduled_at TEXT NOT NULL,
+                    taken_at TEXT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (medication_id, patient_id, scheduled_at),
+                    FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE,
+                    FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE
+                )"
+            );
+        }
     }
 
     private static function ensureSeedData(PDO $db): void
     {
+        $driver = $db->getAttribute(PDO::ATTR_DRIVER_NAME);
+        
         $users = [
             ['Sarah Tan', 'patient@email.com', 'Patient', '1990-05-14'],
             ['Nur Rashidah', 'caregiver@email.com', 'Caregiver', '1985-03-10'],
             ['Dr. Rashid', 'admin@email.com', 'Admin', null],
         ];
         $passwordHash = password_hash('password123', PASSWORD_BCRYPT);
-        $userStmt = $db->prepare(
-            'INSERT OR IGNORE INTO users (name, email, password_hash, role, dob) VALUES (:name, :email, :password_hash, :role, :dob)'
-        );
+        
+        // Handle INSERT OR IGNORE for SQLite, ON CONFLICT for PostgreSQL
+        if ($driver === 'pgsql') {
+            $insertSql = 'INSERT INTO users (name, email, password_hash, role, dob) VALUES (:name, :email, :password_hash, :role, :dob) ON CONFLICT (email) DO UPDATE SET name = :name, password_hash = :password_hash, role = :role, dob = :dob';
+        } else {
+            $insertSql = 'INSERT OR IGNORE INTO users (name, email, password_hash, role, dob) VALUES (:name, :email, :password_hash, :role, :dob)';
+        }
+        
+        $userStmt = $db->prepare($insertSql);
         foreach ($users as [$name, $email, $role, $dob]) {
             $userStmt->execute([
                 'name' => $name,
@@ -117,22 +196,20 @@ class Database
                 'role' => $role,
                 'dob' => $dob,
             ]);
-            $db->prepare('UPDATE users SET name = :name, password_hash = :password_hash, role = :role, dob = :dob WHERE email = :email')
-                ->execute([
-                    'name' => $name,
-                    'email' => $email,
-                    'password_hash' => $passwordHash,
-                    'role' => $role,
-                    'dob' => $dob,
-                ]);
         }
 
-        $patientId = (int) $db->query("SELECT id FROM users WHERE email = 'patient@email.com'")->fetchColumn();
+        $patientStmt = $db->prepare("SELECT id FROM users WHERE email = ?");
+        $patientStmt->execute(['patient@email.com']);
+        $patientId = (int) $patientStmt->fetchColumn();
+        
         if ($patientId <= 0) {
             return;
         }
 
-        $medCount = (int) $db->query("SELECT COUNT(*) FROM medications WHERE patient_id = {$patientId}")->fetchColumn();
+        $countStmt = $db->prepare("SELECT COUNT(*) FROM medications WHERE patient_id = ?");
+        $countStmt->execute([$patientId]);
+        $medCount = (int) $countStmt->fetchColumn();
+        
         if ($medCount === 0) {
             $medStmt = $db->prepare(
                 'INSERT INTO medications (patient_id, medicine_name, dosage, frequency, schedule_time, instructions, remaining_quantity, status, last_refill)
@@ -157,12 +234,16 @@ class Database
             }
         }
 
-        $medications = $db->prepare('SELECT id, schedule_time FROM medications WHERE patient_id = :patient_id');
-        $medications->execute(['patient_id' => $patientId]);
-        $insertDose = $db->prepare(
-            'INSERT OR IGNORE INTO dose_logs (medication_id, patient_id, status, scheduled_at)
-             VALUES (:medication_id, :patient_id, :status, :scheduled_at)'
-        );
+        $medications = $db->prepare('SELECT id, schedule_time FROM medications WHERE patient_id = ?');
+        $medications->execute([$patientId]);
+        
+        if ($driver === 'pgsql') {
+            $insertDoseSql = 'INSERT INTO dose_logs (medication_id, patient_id, status, scheduled_at) VALUES (:medication_id, :patient_id, :status, :scheduled_at) ON CONFLICT DO NOTHING';
+        } else {
+            $insertDoseSql = 'INSERT OR IGNORE INTO dose_logs (medication_id, patient_id, status, scheduled_at) VALUES (:medication_id, :patient_id, :status, :scheduled_at)';
+        }
+        
+        $insertDose = $db->prepare($insertDoseSql);
 
         $today = date('Y-m-d');
         foreach ($medications->fetchAll() as $medication) {
@@ -177,6 +258,7 @@ class Database
                 ]);
             }
         }
+    }
     }
 }
 
