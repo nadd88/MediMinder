@@ -2,6 +2,7 @@
 
 use Slim\Factory\AppFactory;
 use App\Controllers\AuthController;
+use App\Controllers\AdminController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
 
@@ -57,6 +58,20 @@ $app->get('/admin/test', function ($request, $response) {
     $response->getBody()->write(json_encode(['message' => 'Welcome, Admin']));
     return $response->withHeader('Content-Type', 'application/json');
 })->add(new RoleMiddleware(['Admin']))
+  ->add(new AuthMiddleware());
+
+// --- Admin module routes ---
+$app->group('/admin', function ($group) {
+    $group->get('/patients', [AdminController::class, 'listPatients']);
+    $group->get('/medications', [AdminController::class, 'searchMedications']);
+    $group->get('/patients/{id}/prescriptions', [AdminController::class, 'listPrescriptions']);
+    $group->post('/patients/{id}/prescriptions', [AdminController::class, 'createPrescription']);
+    $group->get('/patients/{id}/interactions', [AdminController::class, 'checkInteractions']);
+    $group->get('/patients/{id}/report', [AdminController::class, 'getReport']);
+    $group->get('/patients/{id}/report/csv', [AdminController::class, 'exportReportCsv']);
+    $group->get('/patients/{id}/audit', [AdminController::class, 'listAudit']);
+})
+  ->add(new RoleMiddleware(['Admin']))
   ->add(new AuthMiddleware());
 
 $app->run();
