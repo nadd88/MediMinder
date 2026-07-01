@@ -86,6 +86,7 @@ class AuthController
         // Build JWT payload
         $issuedAt = time();
         $expiresAt = $issuedAt + (60 * 60 * 24); // 24 hours
+        $jwtSecret = getenv('JWT_SECRET') ?: ($_ENV['JWT_SECRET'] ?? 'dev-secret');
 
         $payload = [
             'iat' => $issuedAt,
@@ -94,7 +95,7 @@ class AuthController
             'role' => $user['role'],
         ];
 
-        $jwt = \Firebase\JWT\JWT::encode($payload, $_ENV['JWT_SECRET'], 'HS256');
+        $jwt = self::createToken($payload, $jwtSecret);
 
         $response->getBody()->write(json_encode([
             'message' => 'Login successful',
@@ -107,5 +108,14 @@ class AuthController
             ],
         ]));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+    }
+
+    private static function createToken(array $payload, string $secret): string
+    {
+        $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+        $body = base64_encode(json_encode($payload));
+        $signatureInput = $header . '.' . $body;
+        $signature = hash_hmac('sha256', $signatureInput, $secret, true);
+        return $header . '.' . $body . '.' . base64_encode($signature);
     }
 }

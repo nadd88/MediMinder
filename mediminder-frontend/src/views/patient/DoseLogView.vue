@@ -1,19 +1,28 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { useSidebar } from '@/composables/useSidebar'
-import { mockApi } from '../../api/mockClient'
-import { onMounted } from 'vue'
+import { patientApi } from '../../api/patientApi'
 
 const { sidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
 const medications = ref([])
+const loading = ref(true)
+const error = ref(null)
 
 async function loadDoses() {
-  const response = await mockApi.getDashboardData()
-
-  if (response.success) {
-    medications.value = response.data.medications
+  loading.value = true
+  error.value = null
+  try {
+    const response = await patientApi.getDoses()
+    if (response.success) {
+      medications.value = response.data.medications
+    }
+  } catch (err) {
+    console.error('Failed to load doses:', err)
+    error.value = 'Failed to load dose log. Please try again.'
+  } finally {
+    loading.value = false
   }
 }
 
@@ -29,7 +38,7 @@ function askConfirm(med, action) {
 async function confirmAction() {
   if (!pending.value) return
 
-  await mockApi.markDose(
+  const response = await patientApi.markDose(
     pending.value.med.id,
     pending.value.action
   )
@@ -37,7 +46,7 @@ async function confirmAction() {
   pending.value.med.status = pending.value.action
 
   if (pending.value.action === 'taken') {
-    pending.value.med.takenAt = new Date().toLocaleTimeString('en-MY', {
+    pending.value.med.takenAt = response.data?.takenAt || new Date().toLocaleTimeString('en-MY', {
       hour: '2-digit',
       minute: '2-digit'
     })
@@ -111,7 +120,10 @@ function cancelAction() {
       </header>
 
       <main class="px-4 py-4 max-w-lg mx-auto pb-24 md:pb-8 space-y-3">
+      <div v-if="loading" class="text-sm text-gray-500 bg-white rounded-xl p-4 shadow-sm">Loading dose log...</div>
+      <div v-else-if="error" class="text-sm text-red-700 bg-red-50 rounded-xl p-4">{{ error }}</div>
       <div
+        v-else
         v-for="med in medications"
         :key="med.id"
         class="bg-white rounded-xl p-4 shadow-sm"
@@ -128,22 +140,21 @@ function cancelAction() {
             class="text-xs font-medium px-2 py-1 rounded-full"
             :class="{
               'bg-green-100 text-green-700': med.status === 'taken',
-              'bg-amber-100 text-amber-700': med.status === 'due',
+              'bg-amber-100 text-amber-700': med.status === 'pending',
               'bg-red-100 text-red-700': med.status === 'missed' || med.status === 'skipped',
-              'bg-gray-100 text-gray-500': med.status === 'upcoming',
             }"
           >
-            {{ med.status === 'taken' ? 'Taken' : med.status === 'due' ? 'Due now' : med.status === 'skipped' ? 'Skipped' : med.status === 'missed' ? 'Missed' : 'Upcoming' }}
+            {{ med.status === 'taken' ? 'Taken' : med.status === 'pending' ? 'Due now' : med.status === 'skipped' ? 'Skipped' : med.status === 'missed' ? 'Missed' : 'Upcoming' }}
           </span>
         </div>
 
         <!-- Taken confirmation line -->
         <p v-if="med.status === 'taken'" class="text-sm text-green-600">
-          ✓ Logged at {{ med.takenAt }}
+          Logged at {{ med.takenAt }}
         </p>
 
-        <!-- Mark Taken / Skip buttons (only when due or upcoming) -->
-        <div v-if="med.status === 'due' || med.status === 'upcoming'" class="flex gap-2 mt-1">
+        <!-- Mark Taken / Skip buttons -->
+        <div v-if="med.status === 'pending'" class="flex gap-2 mt-1">
           <button
             class="flex-1 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700"
             @click="askConfirm(med, 'taken')"
@@ -229,3 +240,4 @@ function cancelAction() {
 
   </div>
 </template>
+
