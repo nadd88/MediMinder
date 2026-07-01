@@ -59,7 +59,7 @@ $app->get('/', function ($request, $response) {
 $app->post('/auth/register', [AuthController::class, 'register']);
 $app->post('/auth/login', [AuthController::class, 'login']);
 
-$patientController = fn() => new PatientController(Database::getConnection());
+$patientController = fn() => new PatientController();
 $patientMiddleware = [new RoleMiddleware(['Patient']), new AuthMiddleware()];
 
 $app->get('/patient/dashboard', function ($request, $response) use ($patientController) {
