@@ -2,73 +2,72 @@
 
 namespace App\Controllers;
 
-use App\Models\DoseLog;
-use App\Models\Prescription;
+use App\Models\Medication;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-class DoseController
+class MedicationController
 {
-    public function getTodayDoses(Request $request, Response $response, array $args): Response
+    public function index(Request $request, Response $response): Response
     {
-        $patientId = (int) $args['patientId'];
         $userId = (int) $request->getAttribute('user_id');
         $userRole = $request->getAttribute('user_role');
         
-        // Check permission
-        if ($userRole !== 'Admin' && $userRole !== 'Caregiver' && $userId !== $patientId) {
-            $response->getBody()->write(json_encode(['error' => 'Unauthorized']));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+        // Patients see their own medications, Caregivers see linked patients, Admin sees all
+        if ($userRole === 'Patient') {
+            $medications = Medication::findByPatient($userId);
+        } elseif ($userRole === 'Caregiver') {
+            // Get all patients linked to this caregiver
+            $patients = \App\Models\PatientCaregiver::getPatientsForCaregiver($userId);
+            $medications = [];
+            foreach ($patients as $patient) {
+                $patientMeds = Medication::findByPatient($patient['id']);
+                foreach ($patientMeds as $med) {
+                    $med['patient_name'] = $patient['name'];
+                    $medications[] = $med;
+                }
+            }
+        } else {
+            // Admin - get all medications across all patients
+            $db = \App\Models\Database::getConnection();
+            $stmt = $db->query("
+                SELECT m.*, u.name as patient_name 
+                FROM medications m
+                JOIN users u ON m.patient_id = u.id
+                ORDER BY m.schedule_time ASC
+            ");
+            $medications = $stmt->fetchAll();
         }
-        
-        $doses = DoseLog::getTodayDoses($patientId);
         
         $response->getBody()->write(json_encode([
             'success' => true,
-            'data' => $doses
+            'data' => $medications
         ]));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
     }
 
-    public function markDose(Request $request, Response $response, array $args): Response
+    public function show(Request $request, Response $response, array $args): Response
     {
-        $doseLogId = (int) $args['id'];
-        $data = $request->getParsedBody();
+        $id = (int) $args['id'];
         $userId = (int) $request->getAttribute('user_id');
         $userRole = $request->getAttribute('user_role');
         
-        if (empty($data['status']) || !in_array($data['status'], ['taken', 'skipped'])) {
-            $response->getBody()->write(json_encode(['error' => 'Status must be "taken" or "skipped"']));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-        }
+        $medication = Medication::findById($id);
         
-        // Get the dose log to check permission
-        $db = \App\Models\Database::getConnection();
-        $stmt = $db->prepare("
-            SELECT dl.*, p.patient_id 
-            FROM dose_logs dl
-            JOIN prescriptions p ON dl.prescription_id = p.id
-            WHERE dl.id = :id
-        ");
-        $stmt->execute(['id' => $doseLogId]);
-        $dose = $stmt->fetch();
-        
-        if (!$dose) {
-            $response->getBody()->write(json_encode(['error' => 'Dose log not found']));
+        if (!$medication) {
+            $response->getBody()->write(json_encode(['error' => 'Medication not found']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
         }
         
-        // Check permission: patient themselves, caregiver, or admin
-        if ($userRole !== 'Admin' && $userRole !== 'Caregiver' && $userId !== (int) $dose['patient_id']) {
+        // Check permission
+        if ($userRole === 'Patient' && $medication['patient_id'] !== $userId) {
             $response->getBody()->write(json_encode(['error' => 'Unauthorized']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
         }
         
-        $success = DoseLog::markDose($doseLogId, $data['status']);
-        
         $response->getBody()->write(json_encode([
-            'success' => $success,
-            'message' => "Dose marked as {$data['status']}"
+            'success' => true,
+            'data' => $medication
         ]));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
     }
