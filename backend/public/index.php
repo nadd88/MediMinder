@@ -3,6 +3,8 @@
 use Slim\Factory\AppFactory;
 use App\Controllers\AuthController;
 use App\Controllers\PatientController;
+use App\Controllers\MedicationController;
+use App\Controllers\AdherenceController;
 use App\Models\Database;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
@@ -64,6 +66,25 @@ $app->get('/me', function ($request, $response) {
         'role' => $request->getAttribute('user_role'),
     ]));
     return $response->withHeader('Content-Type', 'application/json');
+})->add(new AuthMiddleware());
+
+$medicationController = fn() => new MedicationController();
+$adherenceController = fn() => new AdherenceController();
+
+$app->get('/medications', function ($request, $response) use ($medicationController) {
+    return $medicationController()->index($request, $response);
+})->add(new AuthMiddleware());
+
+$app->get('/medications/{id}', function ($request, $response, array $args) use ($medicationController) {
+    return $medicationController()->show($request, $response, $args);
+})->add(new AuthMiddleware());
+
+$app->get('/patients/{patientId}/adherence', function ($request, $response, array $args) use ($adherenceController) {
+    return $adherenceController()->getStats($request, $response, $args);
+})->add(new AuthMiddleware());
+
+$app->get('/patients/{patientId}/adherence/weekly', function ($request, $response, array $args) use ($adherenceController) {
+    return $adherenceController()->getWeekly($request, $response, $args);
 })->add(new AuthMiddleware());
 
 $app->get('/admin/test', function ($request, $response) {
