@@ -259,8 +259,4 @@ class Database
             }
         }
     }
-    }
 }
-
-
-
