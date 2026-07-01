@@ -3,11 +3,12 @@ FROM php:8.2-apache
 # 1. Enable Apache rewrite module for Slim Framework routing
 RUN a2enmod rewrite
 
-# 2. Install zip system utilities often required by Composer
+# 2. Install zip and PostgreSQL system utilities often required by Composer
 RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
-    && docker-php-ext-install zip
+    libpq-dev \
+    && docker-php-ext-install zip pdo pdo_pgsql
 
 # 3. Install Composer globally
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
