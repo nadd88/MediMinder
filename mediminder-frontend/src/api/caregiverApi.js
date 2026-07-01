@@ -1,6 +1,6 @@
 import apiClient from './client'
 
-const unwrap = (response) => response.data
+const unwrap = (response) => response.data.data
 
 export const caregiverApi = {
   async getPatients() {
