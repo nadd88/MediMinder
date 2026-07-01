@@ -1,44 +1,51 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 const name = ref('')
 const email = ref('')
 const password = ref('')
-const age = ref(null)
-const gender = ref('Male')
+const dob = ref('')
+const errorMessage = ref('')
+const loading = ref(false)
 
-// caregiver linkage
-const linkCaregiver = ref(false)
-const caregiverEmail = ref('')
+async function handleRegister() {
+  errorMessage.value = ''
 
-function handleRegister() {
   if (!name.value || !email.value || !password.value) {
-    alert('Please fill in required fields')
+    errorMessage.value = 'Please fill in all required fields'
     return
   }
 
-  const payload = {
-    name: name.value,
-    email: email.value,
-    password: password.value,
-    age: age.value,
-    gender: gender.value,
-    caregiverEmail: linkCaregiver.value ? caregiverEmail.value : null
+  if (password.value.length < 8) {
+    errorMessage.value = 'Password must be at least 8 characters'
+    return
   }
 
-  console.log('Register payload:', payload)
-
-  // TODO: send to backend API
-  router.push('/')
+  loading.value = true
+  try {
+    await auth.register({
+      name: name.value,
+      email: email.value,
+      password: password.value,
+      role: 'Patient', // this screen is patient self-registration only
+      dob: dob.value || null,
+    })
+    router.push('/login')
+  } catch (err) {
+    errorMessage.value = err.response?.data?.error || 'Registration failed. Please try again.'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 via-green-50 to-white px-4">
-
     <form
       @submit.prevent="handleRegister"
       class="bg-white w-full max-w-md p-8 rounded-2xl shadow-xl border border-green-100"
@@ -50,62 +57,35 @@ function handleRegister() {
         Create your MediMinder account
       </p>
 
-      <!-- Name -->
+      <p v-if="errorMessage" class="text-red-500 text-sm text-center mb-4">{{ errorMessage }}</p>
+
       <input v-model="name" type="text" placeholder="Full Name"
         class="w-full border p-3 rounded-lg mb-4 focus:ring-2 focus:ring-green-500 focus:outline-none" />
 
-      <!-- Email -->
       <input v-model="email" type="email" placeholder="Email"
         class="w-full border p-3 rounded-lg mb-4 focus:ring-2 focus:ring-green-500 focus:outline-none" />
 
-      <!-- Password -->
-      <input v-model="password" type="password" placeholder="Password"
+      <input v-model="password" type="password" placeholder="Password (min 8 characters)"
         class="w-full border p-3 rounded-lg mb-4 focus:ring-2 focus:ring-green-500 focus:outline-none" />
 
-      <!-- Age -->
-      <input v-model="age" type="number" placeholder="Age"
-        class="w-full border p-3 rounded-lg mb-4 focus:ring-2 focus:ring-green-500 focus:outline-none" />
+      <label class="block text-sm text-gray-500 mb-1">Date of Birth</label>
+      <input v-model="dob" type="date"
+        class="w-full border p-3 rounded-lg mb-6 focus:ring-2 focus:ring-green-500 focus:outline-none" />
 
-      <!-- Gender -->
-      <select v-model="gender"
-        class="w-full border p-3 rounded-lg mb-4 focus:ring-2 focus:ring-green-500 focus:outline-none">
-        <option>Male</option>
-        <option>Female</option>
-        <option>Other</option>
-      </select>
-
-      <!-- Link caregiver toggle -->
-      <div class="flex items-center gap-2 mb-3">
-        <input type="checkbox" v-model="linkCaregiver" />
-        <label class="text-sm text-gray-600">
-          Link to caregiver
-        </label>
-      </div>
-
-      <!-- Conditional caregiver field -->
-      <input
-        v-if="linkCaregiver"
-        v-model="caregiverEmail"
-        type="email"
-        placeholder="Caregiver Email"
-        class="w-full border p-3 rounded-lg mb-6 focus:ring-2 focus:ring-green-500 focus:outline-none"
-      />
-
-      <!-- Submit -->
       <button
         type="submit"
-        class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition"
+        :disabled="loading"
+        class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition disabled:opacity-50"
       >
-        Register
+        {{ loading ? 'Creating account...' : 'Register' }}
       </button>
 
       <p class="text-center text-sm text-gray-500 mt-4">
         Already have an account?
-        <router-link to="/" class="text-green-600 hover:underline">
+        <router-link to="/login" class="text-green-600 hover:underline">
           Sign in
         </router-link>
       </p>
     </form>
-
   </div>
 </template>
