@@ -1,147 +1,76 @@
 # MediMinder
 
-## Overview
+MediMinder is a simple medication management app for patients, caregivers, and administrators. It helps users track medications, monitor adherence, and review medication-related information in one place.
 
-MediMinder is a medication management system that helps patients manage their medication schedules, track adherence, and receive reminders. The system also supports caregiver monitoring to improve medication compliance and patient safety.
+## What the app includes
 
-## Technologies Used
+- Patient dashboard with medication overview
+- Dose tracking and status updates
+- Adherence views for recent medication history
+- Caregiver access to linked patients
+- Admin area for overview and prescription-related pages
 
-* Vue 3
-* Vite
-* Vue Router
-* Pinia
-* Tailwind CSS
-* JavaScript
+## Tech stack
 
----
+- Frontend: Vue 3, Vite, Pinia, Vue Router, Tailwind CSS
+- Backend: Slim 4 (PHP), JWT-based auth, SQLite by default
 
-## Prerequisites
+## Project structure
 
-Before running the project, ensure the following software is installed:
+- backend/ — PHP API and database logic
+- mediminder-frontend/ — Vue frontend application
 
-* Node.js (v18 or later recommended)
-* npm (comes with Node.js)
-* Git
+## Requirements
 
-Check installation:
+Make sure these are installed:
+
+- Node.js 18+
+- npm
+- PHP 8.2+
+- Composer
+
+## Run locally
+
+### 1) Start the backend
 
 ```bash
-node -v
-npm -v
-git --version
+cd backend
+composer install
+php -S localhost:8000 -t public
 ```
 
----
+The API will run at:
 
-## Clone the Repository
-
-```bash
-git clone https://github.com/nadd88/MediMinder
-cd MediMinder
+```text
+http://localhost:8000
 ```
 
-## Install Dependencies
-
-Install all required packages:
+### 2) Start the frontend
 
 ```bash
+cd mediminder-frontend
 npm install
+npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
----
-
-## Running the Development Server
-
-Start the Vite development server:
-
-```bash
-npm run dev
-```
-
-The application will be available at:
+Open the app at:
 
 ```text
 http://localhost:5173
 ```
 
-Open the URL in your browser.
+## Demo login
 
----
+A sample patient account is already available:
 
-## Build for Production
+- Email: patient@email.com
+- Password: password123
 
-To create a production build:
+## Notes
 
-```bash
-npm run build
-```
-
-The compiled files will be generated in the `dist` folder.
-
----
-
-## Preview Production Build
-
-To preview the production build locally:
-
-```bash
-npm run preview
-```
-
-
-## Mock Data
-
-The current prototype uses mock data located in:
-
-```text
-src/api/mockClient.json
-```
-
-Mock API functions are implemented in:
-
-```text
-src/api/mockClient.js
-```
-
-These files simulate backend responses while the actual backend is under development.
-
----
-
-## Features Implemented
-
-### Patient Dashboard
-
-* View medication summary
-* View adherence statistics
-* View due and missed doses
-
-### Dose Management
-
-* Mark doses as taken
-* Skip doses
-* View medication schedule
-* Track medication status
-
-### Adherence Tracking
-
-* Weekly adherence summary
-* Missed dose monitoring
-
----
-
-## Team
-
-Developed as part of the Cross-Platform Application Development Course.
-
-### Contributors
-
-* Nada Mohammed Ibrahim Ali
-* Fatima Yousra
-* Zahra Aulia
-* Lauza Amru
-
----
+- The backend uses SQLite by default and creates the local database automatically on first run.
+- The frontend expects the backend API at http://localhost:8000.
 
 ## License
 
-This project is intended for academic and educational purposes only.
+This project is intended for academic and educational use.
