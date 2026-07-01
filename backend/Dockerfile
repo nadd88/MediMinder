@@ -3,7 +3,10 @@ FROM php:8.2-apache
 # 1. Enable Apache rewrite module for Slim Framework routing
 RUN a2enmod rewrite
 
-# 2. Install zip and PostgreSQL system utilities often required by Composer
+# 2. Allow .htaccess overrides so Apache can route requests through index.php
+RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf /etc/apache2/sites-available/*.conf
+
+# 3. Install zip and PostgreSQL system utilities often required by Composer
 RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
