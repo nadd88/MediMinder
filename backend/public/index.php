@@ -16,6 +16,9 @@ if (class_exists('Dotenv\\Dotenv')) {
 
 $app = AppFactory::create();
 
+//CORS settings
+$app->add(new App\Middleware\CorsMiddleware());
+
 $app->addBodyParsingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
