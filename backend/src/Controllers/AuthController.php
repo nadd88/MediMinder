@@ -91,7 +91,7 @@ class AuthController
         $payload = [
             'iat' => $issuedAt,
             'exp' => $expiresAt,
-            'sub' => $user['id'],
+            'sub' => (int) $user['id'],
             'role' => $user['role'],
         ];
 

@@ -28,12 +28,12 @@ class AuthMiddleware
             return $this->unauthorized('Invalid token');
         }
 
-        if (!isset($decoded['sub'], $decoded['role']) || !is_int($decoded['sub'])) {
+        if (!isset($decoded['sub'], $decoded['role']) || !is_numeric($decoded['sub'])) {
             return $this->unauthorized('Invalid token');
         }
 
         // Attach decoded user info to the request so controllers can read it
-        $request = $request->withAttribute('user_id', $decoded['sub']);
+        $request = $request->withAttribute('user_id', (int) $decoded['sub']);
         $request = $request->withAttribute('user_role', $decoded['role']);
 
         return $handler->handle($request);

@@ -26,7 +26,7 @@ class Database
                     $user = $dbUrlParts['user'] ?? 'postgres';
                     $pass = $dbUrlParts['pass'] ?? '';
                     
-                    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
+                    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require";
                     
                     self::$instance = new PDO($dsn, $user, $pass, [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

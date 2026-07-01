@@ -30,5 +30,12 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 
+# 7b. Allow .htaccess overrides in the document root so Slim's front-controller
+# rewrite rule (public/.htaccess) actually gets applied - without this, Apache
+# ignores .htaccess and returns its own 404 (no CORS headers) for every route
+# other than "/".
+RUN printf '<Directory "%s">\n\tAllowOverride All\n\tRequire all granted\n</Directory>\n' "$APACHE_DOCUMENT_ROOT" > /etc/apache2/conf-available/zz-allow-override.conf \
+    && a2enconf zz-allow-override
+
 # 8. Expose port 80 for Render
 EXPOSE 80
