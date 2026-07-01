@@ -29,7 +29,7 @@ $app->add(function ($request, $handler) {
     // Add your trusted local development and production Vercel URLs here
     $allowedOrigins = [
         'http://localhost:5173',
-        'https://medi-minder-bh3ymnf79-nadd88s-projects.vercel.app'
+        'https://medi-minder-fkr7kbh0n-nadd88s-projects.vercel.app'
     ];
     
     // If the browser's origin is allowed, pass it into the Access-Control header
