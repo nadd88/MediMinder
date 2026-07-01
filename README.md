@@ -69,6 +69,14 @@ MediMinder bridges this gap by providing:
 - **Audit Logs:** Track all system actions for compliance
 
 ---
+##DEMO Accouts
+
+- __Patient__: `patient@email.com` / `password123`
+
+- __Caregiver__: `caregiver@email.com` / `password123`
+
+- __Admin__: `admin@email.com` / `password123`
+
 
 ## Technology Stack
 
