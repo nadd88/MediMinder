@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useRouter } from 'vue-router'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { useSidebar } from '@/composables/useSidebar'
+import { caregiverApi } from '../../api/caregiverApi'
 
 const { sidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
@@ -11,45 +12,12 @@ const auth = useAuthStore()
 const router = useRouter()
 
 const search = ref('')
-
-const patients = [
-  {
-    id: 1,
-    name: 'Ahmad Hamid',
-    relation: 'Father',
-    age: 68,
-    adherence: 92,
-    status: 'good',
-    note: 'All doses taken today',
-    medications: ['Metformin 500mg', 'Amlodipine 5mg'],
-    lastSeen: 'Today, 8:00 AM',
-  },
-  {
-    id: 2,
-    name: 'Rosnah Mat',
-    relation: 'Mother',
-    age: 65,
-    adherence: 54,
-    status: 'attention',
-    note: '3 missed doses this week',
-    medications: ['Lisinopril 10mg', 'Simvastatin 20mg'],
-    lastSeen: 'Yesterday, 9:15 PM',
-  },
-  {
-    id: 3,
-    name: 'Zainab Ali',
-    relation: 'Grandmother',
-    age: 72,
-    adherence: 78,
-    status: 'good',
-    note: '1 dose pending today',
-    medications: ['Aspirin 100mg', 'Atenolol 25mg', 'Calcium 500mg'],
-    lastSeen: 'Today, 7:30 AM',
-  },
-]
+const patients = ref([])
+const loading = ref(true)
+const error = ref('')
 
 const filtered = computed(() =>
-  patients.filter(p =>
+  patients.value.filter((p) =>
     p.name.toLowerCase().includes(search.value.toLowerCase()) ||
     p.relation.toLowerCase().includes(search.value.toLowerCase())
   )
@@ -63,6 +31,42 @@ function handleLogout() {
   auth.logout()
   router.push('/login')
 }
+
+async function loadPatients() {
+  loading.value = true
+  error.value = ''
+  try {
+    const meds = await caregiverApi.getPatients()
+    const grouped = new Map()
+
+    for (const med of meds || []) {
+      const patientId = med.patient_id ?? med.patientId
+      const patientName = med.patient_name || 'Linked patient'
+      if (!grouped.has(patientId)) {
+        grouped.set(patientId, {
+          id: patientId,
+          name: patientName,
+          relation: 'Linked patient',
+          age: '—',
+          adherence: 0,
+          status: 'good',
+          note: 'Loaded from backend',
+          medications: [],
+          lastSeen: 'Available',
+        })
+      }
+    }
+
+    patients.value = Array.from(grouped.values())
+  } catch (err) {
+    console.error('Failed to load patient list:', err)
+    error.value = 'Unable to load patient list.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadPatients)
 </script>
 
 <template>
@@ -116,9 +120,11 @@ function handleLogout() {
 
         <!-- Count -->
         <p class="text-sm text-gray-500 mb-3">{{ filtered.length }} patient{{ filtered.length !== 1 ? 's' : '' }} linked</p>
+        <p v-if="error" class="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">{{ error }}</p>
 
         <!-- Patient cards -->
-        <div class="space-y-3">
+        <div v-if="loading" class="rounded-xl bg-white p-4 text-sm text-gray-500 shadow-sm">Loading linked patients…</div>
+        <div v-else class="space-y-3">
           <div
             v-for="patient in filtered"
             :key="patient.id"

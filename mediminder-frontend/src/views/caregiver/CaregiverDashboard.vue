@@ -1,19 +1,19 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useRouter } from 'vue-router'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { useSidebar } from '@/composables/useSidebar'
+import { caregiverApi } from '../../api/caregiverApi'
 
 const { sidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
 const auth = useAuthStore()
 const router = useRouter()
 
-const patients = [
-  { id: 1, name: 'Ahmad Hamid', relation: 'Father · 68 yrs', adherence: 92, status: 'good', note: 'All doses taken today' },
-  { id: 2, name: 'Rosnah Mat', relation: 'Mother · 65 yrs', adherence: 54, status: 'attention', note: '3 missed doses this week' },
-  { id: 3, name: 'Zainab Ali', relation: 'Grandmother · 72 yrs', adherence: 78, status: 'good', note: '1 dose pending today' },
-]
+const patients = ref([])
+const loading = ref(true)
+const error = ref('')
 
 function initials(name) {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
@@ -23,6 +23,39 @@ function handleLogout() {
   auth.logout()
   router.push('/login')
 }
+
+async function loadPatients() {
+  loading.value = true
+  error.value = ''
+  try {
+    const meds = await caregiverApi.getPatients()
+    const grouped = new Map()
+
+    for (const med of meds || []) {
+      const patientId = med.patient_id ?? med.patientId
+      const patientName = med.patient_name || 'Linked patient'
+      if (!grouped.has(patientId)) {
+        grouped.set(patientId, {
+          id: patientId,
+          name: patientName,
+          relation: 'Linked patient',
+          adherence: 0,
+          status: 'good',
+          note: 'No recent issues',
+        })
+      }
+    }
+
+    patients.value = Array.from(grouped.values())
+  } catch (err) {
+    console.error('Failed to load caregiver patients:', err)
+    error.value = 'Unable to load caregiver data right now.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadPatients)
 </script>
 
 <template>
@@ -58,27 +91,29 @@ function handleLogout() {
       </header>
 
       <main class="px-4 py-4 max-w-lg mx-auto">
+      <p v-if="error" class="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{{ error }}</p>
 
       <!-- Summary cards -->
       <section class="grid grid-cols-2 gap-3 mb-6">
         <div class="bg-white rounded-xl p-4 shadow-sm">
           <p class="text-2xl font-bold text-green-600">
-            {{ patients.filter(p => p.status === 'good').length }}
+            {{ loading ? '…' : patients.length }}
           </p>
-          <p class="text-xs text-gray-500">Good adherence</p>
+          <p class="text-xs text-gray-500">Linked patients</p>
         </div>
         <div class="bg-white rounded-xl p-4 shadow-sm">
           <p class="text-2xl font-bold text-amber-600">
-            {{ patients.filter(p => p.status === 'attention').length }}
+            {{ loading ? '…' : 'Live' }}
           </p>
-          <p class="text-xs text-gray-500">Needs attention</p>
+          <p class="text-xs text-gray-500">Backend data</p>
         </div>
       </section>
 
       <!-- Patient list -->
       <section>
         <h2 class="font-semibold text-gray-800 mb-3">My patients ({{ patients.length }} linked)</h2>
-        <div class="space-y-3">
+        <div v-if="loading" class="rounded-xl bg-white p-4 text-sm text-gray-500 shadow-sm">Loading linked patients…</div>
+        <div v-else class="space-y-3">
           <div
             v-for="patient in patients"
             :key="patient.id"
